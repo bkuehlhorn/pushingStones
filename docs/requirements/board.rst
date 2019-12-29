@@ -9,6 +9,8 @@ Player stone is color of active player.
 
 Opponent stone is color of inactive player
 
+Consider flipping blocks for each player to have **home** boards on bottom.
+
 * Create board
 * Set stones
     * Stone
