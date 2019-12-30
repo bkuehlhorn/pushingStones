@@ -16,6 +16,7 @@ from tkinter.filedialog import askopenfilename
 # All translations provided for illustrative purposes only.
  # english
 _ = lambda s: s
+__ = lambda s: ' '.join(s)
 
 
 
@@ -38,9 +39,6 @@ class PopupDialog(ttk.Frame):
 
 
 
-
-
-
 class StatusBar(ttk.Frame):
     "Sample status bar provided by cookiecutter switch."
     _status_bars = 4
@@ -58,7 +56,6 @@ class StatusBar(ttk.Frame):
 
     def set_text(self, status_index, new_text):
         self.labels[status_index].config(text=new_text)
-
 
 
 
@@ -108,7 +105,7 @@ class MainFrame(ttk.Frame):
 
     def click2(self):
         print('Button 2 clicked.')
-        self.b1.invoke()
+        # self.b1.invoke()
 
     def tick(self):
         "Invoked automatically to update a clock displayed in the GUI."
@@ -125,14 +122,26 @@ class MenuBar(tkinter.Menu):
     "Menu bar appearing with expected components."
 
     def __init__(self, parent):
+        '''
+        “File(new, open, save, resign, close) Game Options: Play: undo, redo, evaluate”
+
+        Excerpt From: Bernard Kuehlhorn. “Pushing Stones Application.” Apple Books.
+        '''
         tkinter.Menu.__init__(self, parent)
 
         filemenu = tkinter.Menu(self, tearoff=False)
         filemenu.add_command(label=_('New'), command=self.new_dialog)
         filemenu.add_command(label=_('Open'), command=self.open_dialog)
+        filemenu.add_command(label=_('Save'), command=self.save_dialog)
         filemenu.add_separator()
         filemenu.add_command(label=_('Exit'), underline=1,
                              command=self.quit)
+
+        playmenu = tkinter.Menu(self, tearoff=False)
+        playmenu.add_command(label=_('Undo'), command=self.undo_dialog)
+        playmenu.add_command(label=_('Redo'), command=self.redo_dialog)
+        filemenu.add_separator()
+        playmenu.add_command(label=_('Evaluate'), command=self.evaluate_dialog)
 
         helpmenu = tkinter.Menu(self, tearoff=False)
         helpmenu.add_command(label=_('Help'), command=lambda:
@@ -141,6 +150,7 @@ class MenuBar(tkinter.Menu):
         self.bind_all('<F1>', self.help_dialog)
 
         self.add_cascade(label=_('File'), underline=0, menu=filemenu)
+        self.add_cascade(label=_('Play'), underline=0, menu=playmenu)
         self.add_cascade(label=_('Help'), underline=0, menu=helpmenu)
 
     def quit(self):
@@ -151,21 +161,32 @@ class MenuBar(tkinter.Menu):
     def help_dialog(self, event):
         "Dialog cataloging results achievable, and provided means available."
 
-        _description = _('Help not yet created.')
+        _description = __(['Pushing Stones Application.', '\n',
+                           'Game with 2x2 boards with 4x4 cells', '\n',
+                           ' Two stones are moved 1 or 2 cells', '\n',
+                           ' First stone is moved on one of boards closest to player.', '\n',
+                           ' Home store can push another stone.', '\n',
+                           ' Second stone is move on other column boards.', '\n',
+                           ' Second stone can push one other stone.', '\n',
+                           ' Stones pushed off a board is captured.', '\n',
+                           ' ', '\n',
+                           'Game is won by capturing 2 stones from one board.'])
         PopupDialog(self, 'pushing stones', _description)
 
     def about_dialog(self):
         "Dialog concerning information about entities responsible for program."
 
-        _description = 'Pushing Stones: game to push 2 stones off one of 2x2 blocks with 4x4 cells and 4 stones of each color on blocks'
+        _description = __(['Pushing Stones:', '\n',
+                            ' game to push 2 stones off one of 2x2 blocks', '\n',
+                            ' with 4x4 cells and 4 stones of each color on blocks'])
+        # _description = ''
         if _description == '':
-            _description = _('No description available')
-        _description += '\n'
-        _description += '\n' + _('Author') + ': Bernard Kuehlhorn'
-        _description += '\n' + _('Email') + ': bkuehlhorn@acm.org'
-        _description += '\n' + _('Version') + ': 0.0.1'
-        _description += '\n' + _('GitHub Package') + \
-                        ': pushingStones'
+            _description = __(['No description available', '\n',
+                               '\n',
+                               _('Author'), ': Bernard Kuehlhorn', '\n',
+                               _('Email'), ': bkuehlhorn@acm.org', '\n',
+                               _('Version'), ': 0.0.1', '\n',
+                               _('GitHub Package'), ': pushingStones'])
         PopupDialog(self, _('About') + ' pushing stones',
                     _description)
 
@@ -182,6 +203,26 @@ class MenuBar(tkinter.Menu):
             print(_('File selected for open: ') + _name)
         else:
             print(_('No file selected'))
+
+    def save_dialog(self):
+        "Non-functional dialog indicating successful navigation."
+
+        PopupDialog(self, _('Save button pressed'), _('Not yet implemented'))
+
+    def undo_dialog(self):
+        "Non-functional dialog indicating successful navigation."
+
+        PopupDialog(self, _('Undo button pressed'), _('Not yet implemented'))
+
+    def redo_dialog(self):
+        "Non-functional dialog indicating successful navigation."
+
+        PopupDialog(self, _('Redo button pressed'), _('Not yet implemented'))
+
+    def evaluate_dialog(self):
+        "Non-functional dialog indicating successful navigation."
+
+        PopupDialog(self, _('Evaluate button pressed'), _('Not yet implemented'))
 
 
 class Application(tkinter.Tk):
@@ -206,13 +247,9 @@ class Application(tkinter.Tk):
         self.start_time = datetime.datetime.now()
         self.uptime()
 
-
-
-
 # Tool bar selection == 'y'
         self.toolbar = ToolBar(self)
         self.toolbar.pack(side='top', fill='x')
-
 
         self.mainframe = MainFrame(self)
         self.mainframe.pack(side='right', fill='y')
