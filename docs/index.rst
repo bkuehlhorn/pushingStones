@@ -3,9 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Pushing Stones Application's documentation!
+Application requirements!
 ======================================================
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -15,9 +14,10 @@ Welcome to Pushing Stones Application's documentation!
    requirements/verify
    requirements/takeTurns
    requirements/evaluate
+   modules/application
+   tests/application
 
 Adding requirements to documentation
-
 
 Indices and tables
 ==================

@@ -7,6 +7,7 @@ Pushing Stones: game to push 2 stones off one of 2x2 blocks with 4x4 cells and 4
 
 import datetime
 import gettext
+from PIL import Image, ImageTk
 import sys
 import time
 import tkinter
@@ -21,7 +22,10 @@ __ = lambda s: ' '.join(s)
 
 
 class PopupDialog(ttk.Frame):
-    "Sample popup dialog implemented to provide feedback."
+    '''
+    Sample popup dialog implemented to provide feedback.
+
+    '''
 
     def __init__(self, parent, title, body):
         ttk.Frame.__init__(self, parent)
@@ -40,7 +44,10 @@ class PopupDialog(ttk.Frame):
 
 
 class StatusBar(ttk.Frame):
-    "Sample status bar provided by cookiecutter switch."
+    '''
+    Sample status bar provided by cookiecutter switch.
+
+    '''
     _status_bars = 4
 
     def __init__(self, parent):
@@ -60,7 +67,10 @@ class StatusBar(ttk.Frame):
 
 
 class ToolBar(ttk.Frame):
-    "Sample toolbar provided by cookiecutter switch."
+    '''
+    Sample toolbar provided by cookiecutter switch.
+
+    '''
 
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
@@ -69,8 +79,7 @@ class ToolBar(ttk.Frame):
         for i in range(1, 5):
             _button_text = _('Tool ') + str(i)
             self.buttons.append(ttk.Button(self, text=_button_text,
-                                           command=lambda i=i:
-                                           self.run_tool(i)))
+                                           command=lambda i=i: self.run_tool(i)))
             self.buttons[i - 1].pack(side=tkinter.LEFT, fill=tkinter.X)
         self.pack()
 
@@ -78,11 +87,15 @@ class ToolBar(ttk.Frame):
         "Sample function provided to show how a toolbar command may be used."
 
         print(_('Toolbar button'), number, _('pressed'))
+        self.master.mainframe.tick(f'Toolbar {number} clicked')
 
 
 
 class MainFrame(ttk.Frame):
-    "Main area of user interface content."
+    '''
+    Main area of user interface content.
+
+    '''
 
     past_time = datetime.datetime.now()
     _advertisement = 'Cookiecutter: Open-Source Project Templates'
@@ -91,9 +104,13 @@ class MainFrame(ttk.Frame):
 
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
+        self.boardframe = Board(self, 0, 0)
+        self.boardframe.pack(side='left') #, fill='y')
+
         self.display = ttk.Label(parent, anchor=tkinter.CENTER, name='label',
                                  foreground='green', background='black')
         self.display.pack(fill=tkinter.BOTH, expand=1)
+
         self.tick()
         self.b1 = ttk.Button(text='Button 1', name='b1', command=self.click1)
         self.b1.pack(side='left')
@@ -102,24 +119,133 @@ class MainFrame(ttk.Frame):
 
     def click1(self):
         print('Button 1 clicked.')
+        self.master.mainframe.tick('Button 1 clicked')
 
     def click2(self):
         print('Button 2 clicked.')
-        # self.b1.invoke()
+        self.b1.invoke()
+        self.master.mainframe.tick('Button 2 clicked')
 
-    def tick(self):
+    def tick(self, button='none'):
         "Invoked automatically to update a clock displayed in the GUI."
 
         this_time = datetime.datetime.now()
         if this_time != self.past_time:
             self.past_time = this_time
             _timestamp = this_time.strftime('%Y-%m-%d %H:%M:%S')
-            self.display.config(text=self._boilerplate + _timestamp)
+            self.display.config(text=self._boilerplate + _timestamp + f'\n\n{button}')
         self.display.after(10000, self.tick)
 
 
+class Board(ttk.Frame):
+    '''
+    Row of 16 black capture cells
+    Row of 16 white capture cells
+    2x2 blocks of 4x4 cells for stones
+    Home: movement, Attach movement (movement: block: x,y, direction, cells moved)
+    Move button (enabled when Home and Attack are set)
+    '''
+    image_size = 75
+
+    def __init__(self, parent, x, y):
+        ttk.Frame.__init__(self, parent)
+        self.capture_black = []
+        self.capture_white = []
+        self.blocks = [[''] * 2] * 2
+
+        self.empty_cell = self.make_image('image/emptycell.png')
+        self.white_image = self.make_image('image/whiteStone.png')
+        self.black_image = self.make_image('image/blackStone.png')
+
+        self.capture_black = self.set_capture_stones(self.empty_cell, row=0, column=0)
+        self.capture_white = self.set_capture_stones(self.empty_cell, row=0, column=6)
+        self.set_capture_stones(self.empty_cell, row=8, column=0)
+        self.set_capture_stones(self.empty_cell, row=8, column=6)
+
+        # test capturing stones
+        # self.capture_white[1].configure(image=self.white_image)
+        # self.capture_white[2].configure(image=self.white_image)
+        # self.capture_black[0].configure(image=self.black_image)
+        # self.capture_black[4].configure(image=self.black_image)
+
+        for x in range(2):
+            for y in range(2):
+                block = Block(self, self.black_image, self.white_image, self.empty_cell, 0, 0)
+                block.grid(row=x*9+3, column=y*5, columnspan=6)
+                # block.grid(row=row, column=y*2)
+                self.blocks[x][y] = block
+        # render black and white origin stones
+
+        self.move_button = tkinter.Button(self, text=f'make move', name=f'make move', command=self.click1)
+        self.move_button.grid(row=13, column=5)
+        pass
+
+    def click1(self):
+        pass
+
+    def make_image(self, png):
+        photo = Image.open(png)
+        return ImageTk.PhotoImage(photo.resize((self.image_size, self.image_size)))
+
+    def set_capture_stones(self, image, row, column):
+        capture_cells = []
+        for each in range(5):
+            capture = tkinter.Label(self, image=image)
+            capture.grid(row=row, column=each+column)
+            capture_cells.append(capture)
+        return capture_cells
+
+    def highlight_home_blocks(self, player):
+        '''
+        add border around home blocks for player
+
+        :param player:
+        :return:
+        '''
+
+    def highlight_attack_blocks(self, home_block):
+        '''
+        add border around attack blocks using home_block
+
+        :param home_block:
+        :return:
+        '''
+
+    def click_move(self):
+        '''
+        update blocks and capture if push off block
+        render blocks and capture stones
+        :return:
+        '''
+
+
+class Block(ttk.Frame):
+    '''
+    Block of 4x4 cells
+    Render buttons for cells starting a x, y of parent.
+    '''
+    def __init__(self, parent, black_stone, white_stone, empty_cell, x=0, y=0):
+        ttk.Frame.__init__(self, parent)
+        button_size = 20
+        # create
+        self.cells = []
+        for bx in range(4):
+            row_cells = []
+            for by in range(4):
+                cell = tkinter.Button(self, image=empty_cell, text=f'Cell {bx}:{by}', name=f'{bx}:{by}', command=self.click1)
+                cell.grid(row=bx, column=by)
+                row_cells.append(cell)
+            self.cells.append(row_cells)
+
+    def click1(self):
+        pass
+
+
 class MenuBar(tkinter.Menu):
-    "Menu bar appearing with expected components."
+    '''
+    Menu bar appearing with expected components.
+
+    '''
 
     def __init__(self, parent):
         '''
@@ -154,12 +280,21 @@ class MenuBar(tkinter.Menu):
         self.add_cascade(label=_('Help'), underline=0, menu=helpmenu)
 
     def quit(self):
-        "Ends toplevel execution."
+        '''
+        Ends toplevel execution.
+
+        :return:
+        '''
 
         sys.exit(0)
 
     def help_dialog(self, event):
-        "Dialog cataloging results achievable, and provided means available."
+        '''
+        Dialog cataloging results achievable, and provided means available.
+
+        :param event:
+        :return:
+        '''
 
         _description = __(['Pushing Stones Application.', '\n',
                            'Game with 2x2 boards with 4x4 cells', '\n',
@@ -174,7 +309,11 @@ class MenuBar(tkinter.Menu):
         PopupDialog(self, 'pushing stones', _description)
 
     def about_dialog(self):
-        "Dialog concerning information about entities responsible for program."
+        '''
+        Dialog concerning information about entities responsible for program.
+
+        :return:
+        '''
 
         _description = __(['Pushing Stones:', '\n',
                             ' game to push 2 stones off one of 2x2 blocks', '\n',
@@ -191,12 +330,20 @@ class MenuBar(tkinter.Menu):
                     _description)
 
     def new_dialog(self):
-        "Non-functional dialog indicating successful navigation."
+        '''
+        Non-functional dialog indicating successful navigation.
+
+        :return:
+        '''
 
         PopupDialog(self, _('New button pressed'), _('Not yet implemented'))
 
     def open_dialog(self):
-        "Standard askopenfilename() invocation and result handling."
+        '''
+        Standard askopenfilename() invocation and result handling.
+
+        :return:
+        '''
 
         _name = tkinter.filedialog.askopenfilename()
         if isinstance(_name, str):
@@ -205,28 +352,47 @@ class MenuBar(tkinter.Menu):
             print(_('No file selected'))
 
     def save_dialog(self):
-        "Non-functional dialog indicating successful navigation."
+        '''
+        Non-functional dialog indicating successful navigation.
+
+        :return:
+        '''
 
         PopupDialog(self, _('Save button pressed'), _('Not yet implemented'))
 
     def undo_dialog(self):
-        "Non-functional dialog indicating successful navigation."
+        '''
+        Non-functional dialog indicating successful navigation.
+
+        :return:
+        '''
 
         PopupDialog(self, _('Undo button pressed'), _('Not yet implemented'))
 
     def redo_dialog(self):
-        "Non-functional dialog indicating successful navigation."
+        '''
+        Non-functional dialog indicating successful navigation.
+
+        :return:
+        '''
 
         PopupDialog(self, _('Redo button pressed'), _('Not yet implemented'))
 
     def evaluate_dialog(self):
-        "Non-functional dialog indicating successful navigation."
+        '''
+        Non-functional dialog indicating successful navigation.
+
+        :return:
+        '''
 
         PopupDialog(self, _('Evaluate button pressed'), _('Not yet implemented'))
 
 
 class Application(tkinter.Tk):
-    "Create top-level Tkinter widget containing all other widgets."
+    '''
+    Create top-level Tkinter widget containing all other widgets.
+
+    '''
 
     def __init__(self):
         tkinter.Tk.__init__(self)
@@ -251,8 +417,10 @@ class Application(tkinter.Tk):
         self.toolbar = ToolBar(self)
         self.toolbar.pack(side='top', fill='x')
 
-        self.mainframe = MainFrame(self)
-        self.mainframe.pack(side='right', fill='y')
+        # self.mainframe = MainFrame(self)
+        # self.mainframe.pack(side='left') #, fill='y')
+        self.boardframe = Board(self, 0, 0)
+        self.boardframe.pack(side='left', fill='y')
 
 # Status bar selection == 'y'
     def uptime(self):
