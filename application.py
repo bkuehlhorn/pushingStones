@@ -5,6 +5,7 @@ pushingStones application
 Pushing Stones: game to push 2 stones off one of 2x2 blocks with 4x4 cells and 4 stones of each color on blocks
 """
 
+from collections import namedtuple
 import datetime
 import gettext
 from PIL import Image, ImageTk
@@ -15,7 +16,7 @@ import tkinter.ttk as ttk
 from tkinter.filedialog import askopenfilename
 
 # All translations provided for illustrative purposes only.
- # english
+# english
 _ = lambda s: s
 __ = lambda s: ' '.join(s)
 
@@ -137,44 +138,54 @@ class MainFrame(ttk.Frame):
         self.display.after(10000, self.tick)
 
 
-class Board(ttk.Frame):
+class Board(tkinter.Frame):
     '''
     Row of 16 black capture cells
     Row of 16 white capture cells
     2x2 blocks of 4x4 cells for stones
     Home: movement, Attach movement (movement: block: x,y, direction, cells moved)
     Move button (enabled when Home and Attack are set)
+
     '''
+    STONE_MOVE = namedtuple('STONE_MOVE', 'cell, direction, distance')
     image_size = 75
+    player = 'white'
+    from_cell = None
+    home_move = None
+    attack_move = None
 
     def __init__(self, parent, x, y):
         ttk.Frame.__init__(self, parent)
+        # self.config(bd=10, bg='blue')
+        self.capture_count = {'black': 0, 'white': 0}
         self.capture_black = []
         self.capture_white = []
-        self.blocks = [[''] * 2] * 2
+        self.blocks = [[0,1],[2,3]]
 
-        self.empty_cell = self.make_image('image/emptycell.png')
+        self.images = {'empty': self.make_image('image/emptycell.png'),
+                       'black': self.make_image('image/blackStone.png'),
+                       'white': self.make_image('image/whiteStone.png')}
+        self.images['empty'] = self.make_image('image/emptycell.png')
         self.white_image = self.make_image('image/whiteStone.png')
         self.black_image = self.make_image('image/blackStone.png')
 
-        self.capture_black = self.set_capture_stones(self.empty_cell, row=0, column=0)
-        self.capture_white = self.set_capture_stones(self.empty_cell, row=0, column=6)
-        self.set_capture_stones(self.empty_cell, row=8, column=0)
-        self.set_capture_stones(self.empty_cell, row=8, column=6)
-
-        # test capturing stones
-        # self.capture_white[1].configure(image=self.white_image)
-        # self.capture_white[2].configure(image=self.white_image)
-        # self.capture_black[0].configure(image=self.black_image)
-        # self.capture_black[4].configure(image=self.black_image)
+        self.captured_stones = {'black': self.set_capture_stones(self.images['empty'], row=0, column=0),
+                                'white': self.set_capture_stones(self.images['empty'], row=0, column=6)}
+        self.set_capture_stones(self.images['empty'], row=8, column=0)
+        self.set_capture_stones(self.images['empty'], row=8, column=6)
 
         for x in range(2):
             for y in range(2):
-                block = Block(self, self.black_image, self.white_image, self.empty_cell, 0, 0)
+                block = Block(self, self.images, 0, 0)
                 block.grid(row=x*9+3, column=y*5, columnspan=6)
-                # block.grid(row=row, column=y*2)
                 self.blocks[x][y] = block
+
         # render black and white origin stones
+        for i in range(2):
+            for j in range(2):
+                for column in range(4):
+                    self.blocks[i][j].setCell(0, column, 'white')
+                    self.blocks[i][j].setCell(3, column, 'black')
 
         self.move_button = tkinter.Button(self, text=f'make move', name=f'make move', command=self.click1)
         self.move_button.grid(row=13, column=5)
@@ -182,6 +193,20 @@ class Board(ttk.Frame):
 
     def click1(self):
         pass
+
+    def capture(self, stone, board):
+        '''
+        Add to captured stones
+        Count stones captured from each board by color
+
+        :param stone: color of captured stone
+        :param board: x, y of board for captured stone
+        :return: false: game continue, true: game over
+        '''
+        self.captured_stones[stone][self.capture_count[stone]].configure(image=self.images[stone])
+        self.capture_count[stone] += 1
+        # count
+
 
     def make_image(self, png):
         photo = Image.open(png)
@@ -224,20 +249,61 @@ class Block(ttk.Frame):
     Block of 4x4 cells
     Render buttons for cells starting a x, y of parent.
     '''
-    def __init__(self, parent, black_stone, white_stone, empty_cell, x=0, y=0):
+    def __init__(self, parent, images, x=0, y=0):
         ttk.Frame.__init__(self, parent)
+        self.cell_image = images
+        style = ttk.Style()
+        style.configure("BW.TLabel", foreground="green", background="white", height=100, bd=10)
+        # relief = tkinter.SUNKEN
+
         button_size = 20
         # create
         self.cells = []
         for bx in range(4):
             row_cells = []
             for by in range(4):
-                cell = tkinter.Button(self, image=empty_cell, text=f'Cell {bx}:{by}', name=f'{bx}:{by}', command=self.click1)
+                cell = tkinter.Button(self, image=self.cell_image['empty'], text='empty', name=f'{bx}:{by}', command=self.click1, bg='blue', bd=by)
+                # cell = ttk.Button(self, text=f'Cell {bx}:{by}', name=f'{bx}:{by}', command=self.click1, style="BW.TLabel")
+                # cell = ttk.Button(self, image=empty_cell, text=f'Cell {bx}:{by}', name=f'{bx}:{by}', command=self.click1, style="BW.TLabel")
+                # cell = ttk.Button(self, image=empty_cell, command=self.click1, style="BW.TLabel")
                 cell.grid(row=bx, column=by)
                 row_cells.append(cell)
             self.cells.append(row_cells)
+        pass
+
+    def setCell(self, x, y, stone):
+        '''
+        set image and text for cell
+        :param x: column of cell
+        :param y: row of cell
+        :param stone: black, white, or empty
+        :return:
+        '''
+        image = self.cell_image[stone]
+        self.cells[x][y].configure(image=image, text=stone)
+
+    def isCell(self, x, y, color):
+        '''
+
+        :param color:
+        :return: true if is, false if not
+        '''
+        return self.cells[x][y].cget('text') == color
+
 
     def click1(self):
+        '''
+        First click:
+            clear highlights
+            Has player stone: false: ignore click
+            select stone to move
+            highlight cell: green
+        Second click:
+            destination cell
+            if legal move from first cell to cell: highlight destination cell: green
+            else: status error, highlight destination cell: red
+        :return:
+        '''
         pass
 
 
@@ -396,6 +462,20 @@ class Application(tkinter.Tk):
 
     def __init__(self):
         tkinter.Tk.__init__(self)
+
+        style = ttk.Style()
+        style.configure("BW.TLabel", foreground="green", background="white", height=100, bd=10)
+
+        l1 = ttk.Label(text="Test", style="BW.TLabel")
+        l2 = ttk.Label(text="Test", style="BW.TLabel")
+        l1.pack()
+        l2.pack()
+
+        frame1 = ttk.Frame(self, style="BW.TLabel")
+        # frame1 = tkinter.Frame(self, highlightbackground="green", highlightcolor="black", highlightthickness=10, width=100,
+        #                height=100, bd=10, bg='blue')
+        frame1.pack()
+
         menubar = MenuBar(self)
         self.config(menu=menubar)
         self.wm_title('pushing stones')

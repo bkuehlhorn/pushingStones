@@ -5,6 +5,6 @@ Main module to play Pushing Stones
 
 Add members and undoc-members
 
-.. automodule:: application
+.. automodule:: pushingStones/application
    :members:
    :undoc-members:
