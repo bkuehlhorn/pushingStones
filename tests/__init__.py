@@ -1,0 +1,98 @@
+
+from application import Application, VALID_BLOCK, VALID_CELL, BLOCK, CELL
+
+
+def select_stone(app, color, block, cell):
+    """
+    select colored stone on block and cell location
+
+    Assert:
+        Home_block: stone_cell has stone
+        Attack_block: stone_cell has stone
+
+    Click Home stone
+    Click Destination stone
+    Click Attack stone
+
+    Verify:
+        Original Attack_block/stone_cell is highlighted
+
+    :param app: pushing stones app
+    :param color: black, white, empty
+    :param block:
+    :param cell: column, row
+    :return: true (verified), false(problem) - may return empty for true and description for error
+    """
+    app_cell = find_cell(app, block, cell)
+    if app_cell is None:
+        return 'Cell not found. may be invalid column and row in block or cell'
+    if app_cell.cget('text') != color:
+        return f'Cell not expected color: expected: {color}, actual: {app_cell.cget("text")}'
+    app_cell.button.invoke()
+    error = ''
+    return error
+
+def verify_cell_details(app, style, color, block, cell):
+    """
+    verify block, cell is in state.
+    verify block, cell has color
+
+    :param app: pushing stones app
+    :param style: cell style used for highlighted or normal
+    :param color: black, white, empty
+    :param block:
+    :param cell: column, row
+    :return: true (verified), false(problem) - may return empty for true and description for error
+    """
+    error = ''
+    found_cell = find_cell(app, block, cell)
+    if found_cell is None:
+        return 'Cell not found. may be invalid column and row in block or cell'
+    # verify state: raised or normal
+    if found_cell['style'] != style:
+        return f'Cell invalid style: expected {style}, actual: {found_cell["style"]}'
+    if found_cell.cget('text') != color:
+        return f'Cell not expected color: expected: {color}, actual: {found_cell.cget("text")}'
+
+    return error
+
+def find_cell(app, block, cell):
+    """
+    find cell in block on board in app
+
+    :param app: pushing stones app
+    :param block: (0-1), (0-1)
+    :param cell: (0-3), (0-3)
+    :return: null if no cell found (bad block values, bad cell values
+    """
+    if VALID_BLOCK(block) and VALID_CELL(cell):
+        app_block = app.board_frame.blocks[block.column][block.row]
+        app_cell = app_block.cells[cell.column][cell.row]
+        return app_cell
+    else:
+        return None
+
+def verify_cells(app, color, stones_list, captured=None):
+    """
+
+    :param app:
+    :param color:
+    :param stones_list:
+    :param captured:
+    :return:
+    """
+    errors = []
+    for block, stones in stones_list.items():
+        (block_column, block_row) = block.split(',')
+        block_column = int(block_column)
+        block_row = int(block_row)
+        for stone in stones:
+            if stone is None:
+                continue  # consider checking captured stones todo: finish developing captured stones
+            actual_cell = app.board_frame.blocks[block_column][block_row].cells[stone.column][stone.row].cget('text')
+            if actual_cell != color:
+                errors.append(
+                    f'expected stone not at block({block_column}, {block_row}, cell({stone}. expected {color}, actual {actual_cell}')
+
+    # verify captured stones
+    return errors

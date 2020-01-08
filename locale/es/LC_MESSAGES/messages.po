@@ -1,0 +1,118 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: messages\n"
+"POT-Creation-Date: 2016-06-16 11:20+PDT\n"
+"PO-Revision-Date: 2016-06-16 12:42-0800\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 1.6.10\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: es\n"
+
+#: pushingStones.py:37
+msgid "OK"
+msgstr "De acuerdo"
+
+#: pushingStones.py:61
+msgid "Navigation "
+msgstr "Navegación "
+
+#: pushingStones.py:74
+msgid "List item"
+msgstr "Producto en la lista"
+
+#: pushingStones.py:88
+msgid "Unset status "
+msgstr "estado desarmado "
+
+#: pushingStones.py:108
+msgid "Tool "
+msgstr "Herramienta "
+
+#: pushingStones.py:118
+msgid "Toolbar button"
+msgstr "botón de la barra"
+
+#: pushingStones.py:118
+msgid "pressed"
+msgstr "presionado"
+
+#: pushingStones.py:127
+msgid "Template"
+msgstr "Modelo"
+
+#: pushingStones.py:155
+msgid "New"
+msgstr "Nuevo"
+
+#: pushingStones.py:156
+msgid "Open"
+msgstr "Abierto"
+
+#: pushingStones.py:159
+msgid "Exit"
+msgstr "Salida"
+
+#: pushingStones.py:163 pushingStones.py:170
+msgid "Help"
+msgstr "Ayuda"
+
+#: pushingStones.py:165 pushingStones.py:195
+msgid "About"
+msgstr "Sobre"
+
+#: pushingStones.py:169
+msgid "File"
+msgstr "Archivo"
+
+#: pushingStones.py:180
+msgid "Help not yet created."
+msgstr "Ayudará aún no creado."
+
+#: pushingStones.py:188
+msgid "No description available"
+msgstr "No hay descripción disponible"
+
+#: pushingStones.py:190
+msgid "Author"
+msgstr "Autor"
+
+#: pushingStones.py:191
+msgid "Email"
+msgstr "Email"
+
+#: pushingStones.py:192
+msgid "Version"
+msgstr "Versión"
+
+#: pushingStones.py:193
+msgid "GitHub Package"
+msgstr "GitHub paquete"
+
+#: pushingStones.py:201
+msgid "New button pressed"
+msgstr "Nuevo botón presionado"
+
+#: pushingStones.py:201
+msgid "Not yet implemented"
+msgstr "Aun no implementado"
+
+#: pushingStones.py:208
+msgid "File selected for open: "
+msgstr "Archivo seleccionado para abrir:"
+
+#: pushingStones.py:210
+msgid "No file selected"
+msgstr "Ningún archivo seleccionado"
+
+#: pushingStones.py:252
+msgid "Uptime"
+msgstr "Uptime"

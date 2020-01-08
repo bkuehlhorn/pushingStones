@@ -18,7 +18,8 @@ import tkinter
 import tkinter.ttk as ttk
 from tkinter.filedialog import askopenfilename
 
-CELL = namedtuple('CELL', 'row, column')
+BLOCK = namedtuple('BLOCK', 'column, row')
+CELL = namedtuple('CELL', 'column row')
 DIRECTION = namedtuple('DIRECTION', 'rowDelta, columnDelta')
 MOVE_STONE = namedtuple('MOVE_STONE', 'board, row, column, direction, distance')
 MOVE_STONES = namedtuple('MOVE_STONES', 'home_move, attack_move')
@@ -61,9 +62,14 @@ def Add_attack_move(move_stones, attack_move):
 
 # All translations provided for illustrative purposes only.
 # english
+
+
 _ = lambda s: s
 __ = lambda s: ' '.join(s)
-
+def VALID_BLOCK(block):
+    return (block.column > -1 and block.column < 2) and (block.row > -1 and block.row < 2)
+def VALID_CELL(cell):
+    return (cell.column > -1 and cell.column < 4) and (cell.row > -1 and cell.row < 4)
 
 
 class PopupDialog(ttk.Frame):
@@ -202,36 +208,38 @@ class Board(tkinter.Canvas):
     Design:
         Render: board, blocks, cells and cell button
         Highlight: Home Blocks, Attack Blocks, Origin Cell, Destination Cell
+        methods:
+            undo: backout history move
+            redo: do history again
 
         Click cell button:
             if home origin cell is empty
                 if cell is same color:
                     highlight cell,
-                    save column and row for original home block,
-                    action is home destination cell
+                    save column and row for original home block
                 else:
                     report error
             else if home origin cell is not empty
-                if distance is more than 2 or pushes a stone:
+                if distance is more than 2 or stones in destination cells:  -- check cell 1 or 2 in direction
+                    report error, highlight cells
+                else:
+                    highlight cell,
+                    save column and row for destination home block
+                    highlight attack blocks
+            else if home origin cell is not empty and attack origin cell is same color:
+                highlight cell,
+                save column and row for destination home block,
+                action is attack destination cell
+                calculate attack destination cell and highlight
+                if is attack destination cell off board or attack pushes 2 stones or (maybe) pushes own stone:
                     report error, highlight cells, action is home destination cell
                 else:
                     highlight cell,
-                    save column and row for destination home block,
-                    action is attack origin cell
-            else if home origin cell is not empty and attack origin cell is empty:
-                if cell is same color:
-                    highlight cell,
-                    save column and row for destination home block,
-                    action is attack destination cell
-                else:
-                    report error
-            else if attack origin cell is not empty:
-                if distance is not equal to home distance or pushes 2 stones:
-                    report error, highlight cells, action is home destination cell
-                else:
-                    highlight cell,
-                    save column and row for destination home block,
-                    action is attack origin cell
+                    save column and row for origin attack block,
+                    save column and row for destination attack block -- may not save this
+                    clear attack blocks highlight
+            else:
+                report error: select your stone to move
 
     """
     image_size = 75
@@ -241,14 +249,14 @@ class Board(tkinter.Canvas):
         # ttk.Frame.__init__(self, parent)
         super().__init__(parent) # create a frame (self)
 
-        self.vsb = ttk.Scrollbar(parent, orient='vertical', command=self.yview)
-        self.hsb = ttk.Scrollbar(parent, orient='horizontal', command=self.xview)
-        self.configure(yscrollcommand=self.vsb.set, xscrollcommand=self.hsb.set)
-        # self.grid(column=0, row=0, sticky='nsew', in_=parent)
-        # vsb.grid(column=1, row=0, sticky='ns', in_=parent)
-        # hsb.grid(column=0, row=1, sticky='ew', in_=parent)
-        self.vsb.pack()
-        self.hsb.pack()
+        # self.vsb = ttk.Scrollbar(parent, orient='vertical', command=self.yview)
+        # self.hsb = ttk.Scrollbar(parent, orient='horizontal', command=self.xview)
+        # self.configure(yscrollcommand=self.vsb.set, xscrollcommand=self.hsb.set)
+        # # self.grid(column=0, row=0, sticky='nsew', in_=parent)
+        # # vsb.grid(column=1, row=0, sticky='ns', in_=parent)
+        # # hsb.grid(column=0, row=1, sticky='ew', in_=parent)
+        # self.vsb.pack()
+        # self.hsb.pack()
 
         # self.vsb = ttk.Scrollbar(self, orient="vertical", command=self.yview)  # place a scrollbar on self
         # self.configure(yscrollcommand=self.vsb.set)  # attach scrollbar action to scroll of canvas
@@ -258,37 +266,59 @@ class Board(tkinter.Canvas):
         self.capture_black = []
         self.capture_white = []
         self.blocks = [[0,1],[2,3]]
+        self.move_history = [] # (move, push)
 
         self.images = dict(empty=self.make_image('image/emptycell.png'),
                            black=self.make_image('image/blackStone.png'),
                            white=self.make_image('image/whiteStone.png'))
-        self.white_image = self.make_image('image/whiteStone.png')
-        self.black_image = self.make_image('image/blackStone.png')
 
-        self.captured_stones = {'black': self.set_capture_stones(self.images['empty'], row=0, column=0),
-                                'white': self.set_capture_stones(self.images['empty'], row=0, column=6)}
-        self.set_capture_stones(self.images['empty'], row=8, column=0)
-        self.set_capture_stones(self.images['empty'], row=8, column=6)
+        for column in range(2):
+            for row in range(2):
+                block = Block(self, column, row, self.images, 0, 0)
+                block.grid(column=column*6, row=row*10+2, columnspan=6)
+                self.blocks[column][row] = block
 
-        for x in range(2):
-            for y in range(2):
-                block = Block(self, x, y, self.images, 0, 0)
-                block.grid(row=x*9+3, column=y*6, columnspan=6)
-                self.blocks[x][y] = block
+        # test different initial placement and captured stones
+        # initial_white_stones_test = {
+        #     '0,0': [CELL(1, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
+        #     '0,1': [CELL(0, 0), CELL(2, 1), CELL(0, 2), CELL(0, 3)],
+        #     '1,0': [CELL(0, 0), CELL(0, 1), None,       CELL(0, 3)],
+        #     '1,1': [CELL(0, 0), CELL(0, 1), CELL(0, 2), None]
+        # }
+        # initial_black_stones_test = {
+        #     '0,0': [CELL(3, 0), CELL(3, 1), CELL(3, 2), None],
+        #     '0,1': [CELL(3, 0), CELL(3, 1), CELL(2, 2), CELL(3, 3)],
+        #     '1,0': [CELL(3, 0), CELL(1, 1), CELL(3, 2), CELL(3, 3)],
+        #     '1,1': [None,       CELL(3, 1), CELL(3, 2), CELL(3, 3)]
+        # }
+        # self.set_board(initial_white_stones_test, initial_black_stones_test)
 
-        # render black and white origin stones
-        for i in range(2):
-            for j in range(2):
-                for column in range(4):
-                    self.blocks[i][j].cells[0][column].set_cell('white')
-                    self.blocks[i][j].cells[3][column].set_cell('black')
+        initial_white_stones = {
+            '0,0': [CELL(0, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
+            '0,1': [CELL(0, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
+            '1,0': [CELL(0, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
+            '1,1': [CELL(0, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)]
+        }
+        initial_black_stones = {
+            '0,0': [CELL(3, 0), CELL(3, 1), CELL(3, 2), CELL(3, 3)],
+            '0,1': [CELL(3, 0), CELL(3, 1), CELL(3, 2), CELL(3, 3)],
+            '1,0': [CELL(3, 0), CELL(3, 1), CELL(3, 2), CELL(3, 3)],
+            '1,1': [CELL(3, 0), CELL(3, 1), CELL(3, 2), CELL(3, 3)]
+        }
+        self.set_board(initial_white_stones, initial_black_stones)
 
-        self.move_button = tkinter.Button(self, text=f'make move', name=f'make move', command=self.click1)
-        self.move_button.grid(row=13, column=5)
+        self.move_button = tkinter.Button(self, text=f'make move', name=f'make move', command=self.make_moves)
+        self.move_button.grid(column=5, row=13)
 
         self.from_cell = None  # CELL
         self.home_move = None  # MOVE_STONE
         self.attack_move = None  # MOVE_STONE
+
+        # test capture block
+        # self.capture('white', (0,0))
+        # self.capture('black', (3,3))
+        # self.capture('white', (0,0))
+        # self.capture('black', (3,3))
         pass
 
     def set_cell(self, block_column, block_row, cell_column, cell_row, color):
@@ -303,37 +333,55 @@ class Board(tkinter.Canvas):
         """
         self.blocks[block_column][block_row].cells[cell_column][cell_row].set_cell(color)
 
-    def click1(self):
+    def make_moves(self):
         """
-        hold method for clicking cell
+        hold method for moving stones:
+            home stone moves: empty origin cell, color destination cell
+            move pushed attack stone: empty origin cell, (color destination cell or add pushed off stones to capture images)
+            attack stone moves: empty origin cell, color destination cell
+            save push for history
+
+            player is other color
+            highlight home blocks for player
+        add to self.move_history: move, push
 
         :return:
         """
         return True
 
-    def capture(self, stone, board):
+    def capture(self, color, board):
         """
         Add to captured stones
         Count stones captured from each board by color
 
-        :param stone: color of captured stone
-        :param board: x, y of board for captured stone
+        :param color: color of captured stone
+        :param board: column, row of board for captured stone
         :return: false: game continue, true: game over
         """
-        self.captured_stones[stone][self.capture_count[stone]].configure(image=self.images[stone])
-        self.capture_count[stone] += 1
-        # count
+        self.captured_stones[color][self.capture_count[color]].configure(image=self.images[color])
+        self.capture_count[color] += 1
+        #todo check game over: captured 2 stones from one board. check new board string in captured set
+        #todo save board for captured stones: add board string to set
+        return False # default to continue playing
 
 
     def make_image(self, png):
         photo = Image.open(png)
         return ImageTk.PhotoImage(photo.resize((self.image_size, self.image_size)))
 
-    def set_capture_stones(self, image, row, column):
+    def set_capture_stones(self, image, column, row):
+        """
+        is this needed
+        need to pass color and mape to image
+        :param image:
+        :param column:
+        :param row:
+        :return:
+        """
         capture_cells = []
         for each in range(5):
             capture = tkinter.Label(self, image=image)
-            capture.grid(row=row, column=each+column)
+            capture.grid(column=each+column, row=row)
             capture_cells.append(capture)
         return capture_cells
 
@@ -363,65 +411,90 @@ class Board(tkinter.Canvas):
         """
         pass
 
+    def set_board(self, white_stones, black_stones):
+        """
+        clear stones off board
+        Put stones on board and captured
+        stone list is four[0-3] cells in each block [0-1][0-1]
+        
+        :param white_stones: list of stones, None in list are captured
+        :param black_stones: list of stones, None in list are captured
+        :return:
+        """
+        for block_column in range(2):
+            for block_row in range(2):
+                for cell_column in range(4):
+                    for cell_row in range(4):
+                        self.blocks[block_column][block_row].cells[cell_column][cell_row].set_cell('empty')
+
+        self.captured_stones = {'black': self.set_capture_stones(self.images['empty'], column=0, row=1),
+                                'white': self.set_capture_stones(self.images['empty'], column=6, row=1)}
+
+        for block, stones in white_stones.items():
+            (block_column, block_row) = block.split(',')
+            block_column = int(block_column)
+            block_row = int(block_row)
+            self.set_stones('white', block_column, block_row, stones)
+
+        for block, stones in black_stones.items():
+            (block_column, block_row) = block.split(',')
+            block_column = int(block_column)
+            block_row = int(block_row)
+            self.set_stones('black', block_column, block_row, stones)
+
+    def set_stones(self, color, block_column, block_row, stones):
+        """
+
+        :param stones:
+        :return:
+        """
+        for stone in stones:
+            if stone is None:
+                self.capture(color, BLOCK(block_column, block_row))
+            else:
+                self.blocks[block_column][block_row].cells[stone.column][stone.row].set_cell(color)
+
 
 class Block(ttk.Frame):
     """
     Block of 4x4 cells
     Render buttons for cells starting a x, y of parent.
     """
-    def __init__(self, parent, block_x, block_y, images, x=0, y=0):
-        ttk.Frame.__init__(self, parent)
+    def __init__(self, parent, block_column, block_row, images, column=0, row=0):
+        # ttk.Frame.__init__(self, parent, borderwidth=20)
+        ttk.Frame.__init__(self, parent, style='block.TFrame', borderwidth=20)
         self.cell_image = images
 
         button_size = 20
         # create
         self.cells = []
-        for cell_x in range(4):
+        for cell_row in range(4):
             row_cells = []
-            for cell_y in range(4):
-                cell = Cell(self, color='empty', name=f'{cell_x}:{cell_y}')
-                cell.grid(row=cell_x, column=cell_y)
+            for cell_column in range(4):
+                cell = Cell(self, color='empty', name=f'{cell_row}:{cell_column}')
+                cell.grid(column=cell_column, row=cell_row)
                 row_cells.append(cell)
             self.cells.append(row_cells)
         pass
 
-    def set_cell(self, x, y, stone):
+    def set_cell(self, column, row, stone):
         """
         set image and text for cell
-        :param x: column of cell
-        :param y: row of cell
+        :param column: column of cell
+        :param row: row of cell
         :param stone: black, white, or empty
         :return:
         """
         image = self.cell_image[stone]
-        self.cells[x][y].configure(image=image, text=stone)
+        self.cells[column][row].configure(image=image, text=stone)
 
-    def in_cell(self, x, y, color):
+    def in_cell(self, column, row, color):
         """
 
         :param color:
         :return: true if is, false if not
         """
-        return self.cells[x][y].cget('text') == color
-
-
-    def select_stone(self, block_x, block_y, x, y):
-        """
-        First click:
-            clear highlights
-            Has player stone: false: ignore click
-            select stone to move
-            highlight cell: green
-
-        Second click:
-            destination cell
-            if legal move from first cell to cell: highlight destination cell: green
-            else: status error, highlight destination cell: red
-
-        :return:
-        """
-        self.cells[x][y].config(relief=tkinter.SUNKEN)
-        pass
+        return self.cells[column][row].cget('text') == color
 
 
 class Cell(ttk.Frame):
@@ -439,13 +512,7 @@ class Cell(ttk.Frame):
         """
         ttk.Frame.__init__(self, parent, *args, **kwargs)
         image = self.master.cell_image[color]
-        # ttk.Frame.__init__(self, parent, highlightbackground="green", highlightcolor="black", highlightthickness=10, *args, **kwargs)
-        # cell = Cell(self, image=self.cell_image['empty'], text='empty', name=f'{cell_x}:{cell_y}',
-        #             command=partial(self.select_stone, block_x, block_y, cell_x, cell_y))
         self.button = CellButton(parent, *args, image=image, text=color, command=partial (self.select_stone), **kwargs)
-        # cell.pack()
-
-        # self.cell_image = images
 
     def set_cell(self, stone):
         """
@@ -468,16 +535,16 @@ class Cell(ttk.Frame):
             if legal move from first cell to cell: highlight destination cell: green
             else: status error, highlight destination cell: red
 
+        Third click:
+            attack origin cell
+            {details}
+
         :return:
         """
         s = ttk.Style()
         s.configure('Select.TButton', font='helvetica 24', foreground='red', padding=10)
-        # self['style'] = 'Select.TButton'
-        # s.theme_use('classic')
         self['style'] = 'selected.TLabel' if self['style'] is '' else ''
         self.master['style'] = 'block.TFrame' if self.master['style'] is '' else ''
-        # self.config(relief=tkinter.SUNKEN , style="f.BW.TLabel")
-        # self.config(style="f.BW.TLabel")
         pass
 
 
@@ -656,11 +723,10 @@ class Application(tkinter.Tk):
         tkinter.Tk.__init__(self)
 
         style = ttk.Style()
-        # style.configure("BW.TLabel", foreground="magenta", highlightcolor='red', background="white", height=200, bd=20, relief='raised', font='Times')
         style.configure("BW.TLabel", foreground="green", highlightcolor='red', background="black", height=200, bd=40, font=('Helvetica', 30))
         style.configure("f.BW.TLabel", foreground="magenta",  relief='raised')
         style.configure("selected.TLabel", foreground="magenta",  relief='raised')
-        style.configure("block.TFrame", foreground="magenta", bd=2, bg='red',  relief='raised')
+        style.configure("block.TFrame", foreground="magenta", bd=20, bg='red',  relief='raised', borderwidth=20)
         style.configure("BW.TFrame", foreground="blue", background="white", height=200, bd=10)
         style.configure('blue.TFrame', highlightbackground="red", highlightcolor="black", highlightthickness=10, width=1000,
                        height=300, bd=30, bg='black',)
@@ -668,55 +734,9 @@ class Application(tkinter.Tk):
         self.wm_title('Pushing Stones')
         self.wm_geometry('1000x2000')
 
-        # self.l1 = ttk.Label(text="Test this stuff", style="BW.TLabel")
-        # self.l2 = ttk.Label(text="Test", style="BW.TLabel")
-        # # self.l2 = ttk.Label(text="Test2")
-        # self.l1.pack()
-        # self.l2.pack()
-
-        # self.frame1 = ttk.Frame(self, style='blue.TFrame')
-        # self.frame1 = ttk.LabelFrame(self, style='blue.TFrame')
-        # self.frame1 = ttk.Frame(self)
-        # self.frame1 = tkinter.Frame(self, highlightbackground="green", highlightcolor="black", highlightthickness=10, width=7000,
-        #                height=100, bd=10, bg='blue')
-
-        # self.l1s = ttk.Label(self.frame1, text="Test this stuff", style="BW.TLabel")
-        # self.l2s = ttk.Label(self.frame1, text="Test Frame", style="f.BW.TLabel")
-        # # self.l2 = ttk.Label(text="Test2")
-        # self.l1s.pack()
-        # self.l2s.pack()
-        # self.frame1.pack()
-        #
-        # self.grid_rowconfigure(0, weight=1)
-        # self.grid_columnconfigure(0, weight=1)
-
-        # xscrollbar = tkinter.Scrollbar(self, orient=tkinter.HORIZONTAL)
-        # # xscrollbar.grid(row=1, column=0, sticky=tkinter.E + tkinter.W)
-        #
-        # yscrollbar = tkinter.Scrollbar(self)
-        # yscrollbar.grid(row=0, column=1, sticky=tkinter.N + tkinter.S)
-
-        # self.canvas = tkinter.Canvas(self, bd=0,
-        #                 xscrollcommand=xscrollbar.set,
-        #                 yscrollcommand=yscrollbar.set)
-        # self.canvas = tkinter.Frame(self)
-        #
-        # # canvas.grid(row=0, column=0, sticky=tkinter.N + tkinter.S + tkinter.E + tkinter.W)
-        #
-        # # xscrollbar.config(command=self.canvas.xview)
-        # # yscrollbar.config(command=self.canvas.yview)
-        #
-        # self.l1sc = ttk.Label(self.canvas, text="Canvas Test this stuff", style="BW.TLabel")
-        # self.l2sc = ttk.Label(self.canvas, text="Canvas Test Frame", style="f.BW.TLabel")
-        # # self.l2 = ttk.Label(text="Test2")
-        # self.l1sc.pack()
-        # self.l2sc.pack()
-        # self.pack()
-
         menubar = MenuBar(self)
         self.config(menu=menubar)
 
-        # Status bar selection == 'y'
         self.statusbar = StatusBar(self)
         self.statusbar.pack(side='bottom', fill='x')
         self.bind_all('<Enter>',
@@ -728,41 +748,9 @@ class Application(tkinter.Tk):
         self.start_time = datetime.datetime.now()
         self.uptime()
 
-# Tool bar selection == 'y'
-
-#         self.scrollbar = tkinter.Scrollbar(self)
-#         self.scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
-#
-#         self.listbox = tkinter.Listbox(self, bd=0, yscrollcommand=self.scrollbar.set)
-#         self.listbox.pack()
-#
-#         self.scrollbar.config(command=self.listbox.yview)
-
         self.tool_bar = ToolBar(self)
         self.tool_bar.pack(side='top', fill='x')
-
-        # self.mainframe = MainFrame(self)
-        # self.mainframe.pack(side='left') #, fill='y')
-        # self.scrollbar = ttk.Scrollbar(self)
         self.board_frame = Board(self, 0, 0)
-        # self.board_frame = Board(self, 0, 0, yscrollcommand=self.scrollbar.set)
-        # self.scrollbar.config(command=self.selected_files.yview)
-
-        # self.xscrollbar = ttk.Scrollbar(self, orient=tkinter.HORIZONTAL)
-        # # self.xscrollbar.grid(row=1, column=0, sticky=tkinter.E + tkinter.W)
-        #
-        # self.yscrollbar = ttk.Scrollbar(self)
-        # # self.yscrollbar.grid(row=0, column=1, sticky=tkinter.N + tkinter.S)
-        #
-        # self.board_frame = Board(self, 0, 0, bd=0,
-        #                 xscrollcommand=self.xscrollbar.set,
-        #                 yscrollcommand=self.yscrollbar.set)
-        #
-        # self.board_frame.grid(row=0, column=0, sticky=tkinter.N + tkinter.S + tkinter.E + tkinter.W)
-        #
-        # self.xscrollbar.config(command=self.board_frame.xview)
-        # self.yscrollbar.config(command=self.board_frame.yview)
-
         self.board_frame.pack(side='left', fill='y')
 
 # Status bar selection == 'y'

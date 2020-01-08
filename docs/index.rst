@@ -16,6 +16,7 @@ Application requirements!
    requirements/evaluate
    modules/application
    tests/application
+   tests/block
    tests/sample
 
 Adding requirements to documentation
