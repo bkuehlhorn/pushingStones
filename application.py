@@ -18,50 +18,13 @@ import tkinter
 import tkinter.ttk as ttk
 from tkinter.filedialog import askopenfilename
 
-BLOCK = namedtuple('BLOCK', 'column, row')
-CELL = namedtuple('CELL', 'column row')
-DIRECTION = namedtuple('DIRECTION', 'rowDelta, columnDelta')
-MOVE_STONE = namedtuple('MOVE_STONE', 'board, row, column, direction, distance')
-MOVE_STONES = namedtuple('MOVE_STONES', 'home_move, attack_move')
-
-
-def Move_stone(board, from_cell, to_cell):
-    """
-    calculate direction and distance for from and to cells
-
-    :param board: 
-    :param from_cell: 
-    :param to_cell: 
-    :return: 
-    """
-    rowDelta = from_cell.row - to_cell.row
-    columnDelta = from_cell.column - to_cell.column
-    direction = DIRECTION(rowDelta, columnDelta)
-    distance = max(abs(direction.rowDelta), abs(direction.columnDelta))
-    return MOVE_STONE(board, from_cell, direction, distance)
-
-
-def Set_home_move(move_stone):
-    """
-    Create MOVE_STONES for column with 
-    :param move_stone: of stone to move
-    :return MOVE_STONE: Half move for home block 
-    """
-    return MOVE_STONES(move_stone, None)
-
-
-def Add_attack_move(move_stones, attack_move):
-    """
-    Add attack_move to move_stones
-    
-    :param move_stones: 
-    :param attack_move: Cell on attach board to move
-    :return MOVE_STONE: complete move for home and attack blocks
-    """
-    return MOVE_STONES(move_stones.home_move, attack_move)
 
 # All translations provided for illustrative purposes only.
 # english
+
+BLOCK = namedtuple('BLOCK', 'column, row')
+CELL = namedtuple('CELL', 'column row')
+MOVE_STONES = namedtuple('MOVE_STONES', 'home_move, attack_move')
 
 
 _ = lambda s: s
@@ -70,6 +33,32 @@ def VALID_BLOCK(block):
     return (block.column > -1 and block.column < 2) and (block.row > -1 and block.row < 2)
 def VALID_CELL(cell):
     return (cell.column > -1 and cell.column < 4) and (cell.row > -1 and cell.row < 4)
+
+
+class MoveStone(object):
+    def __init__(self, from_cell):
+        self.from_cell = from_cell
+
+    def add_to_cell(self, to_cell):
+        self.to_cell = to_cell
+        self.rowDelta = self.from_cell.row - self.to_cell.row
+        self.columnDelta = self.from_cell.column - self.to_cell.column
+        self.direction = max(abs(self.rowDelta), abs(self.columnDelta))
+        return
+
+    def use_distance(self, direction, distance):
+        """
+        possible to save pushed cells. one for each distance
+        :param direction:
+        :param distance:
+        :return:
+        """
+        self.direction = direction
+        self.distance = distance
+        self.to_cell = CELL(self.from_cell.column + self.distance.columnDelta * self.distance,
+                            self.from_cell.row + self.distance.rowDelta * self.distance)
+        self.pushed_cells = [] # one or two cells are pushed
+        return VALID_CELL(self.to_cell)
 
 
 class PopupDialog(ttk.Frame):
@@ -160,8 +149,10 @@ class MainFrame(ttk.Frame):
 
     def __init__(self, parent):
         ttk.Frame.__init__(self, parent)
-        self.boardframe = Board(self, 0, 0)
-        self.boardframe.pack(side='left') #, fill='y')
+        # self.boardframe = Board(self, 0, 0)
+        # self.boardframe.pack(side='left') #, fill='y')
+        # self.boardframe.(color)
+
 
         self.display = ttk.Label(parent, anchor=tkinter.CENTER, name='label',
                                  foreground='green', background='black')
@@ -172,9 +163,9 @@ class MainFrame(ttk.Frame):
         self.display.pack(fill=tkinter.BOTH, expand=1)
 
         self.tick()
-        self.b1 = ttk.Button(text='Button 1', name='b1', command=self.click1)
+        self.b1 = ttk.Button(self, text='Button 1', name='b1', command=self.click1)
         self.b1.pack(side='left')
-        self.b2 = ttk.Button(text='Button 2', name='b2', command=self.click2)
+        self.b2 = ttk.Button(self, text='Button 2', name='b2', command=self.click2)
         self.b2.pack(side='left')
 
     def click1(self):
@@ -199,8 +190,8 @@ class MainFrame(ttk.Frame):
 
 class Board(tkinter.Canvas):
     """
-    Row of 16 black capture cells
-    Row of 16 white capture cells
+    Row of 5 black capture cells, one from each block and one more is game over
+    Row of 5 white capture cells, one from each block and one more is game over
     2x2 blocks of 4x4 cells for stones
     Home: movement, Attach movement (movement: block: x,y, direction, cells moved)
     Move button (enabled when Home and Attack are set)
@@ -244,29 +235,19 @@ class Board(tkinter.Canvas):
     """
     image_size = 75
     player = 'white' # color of current player
+    home_boards = {'white': 0, 'black': 1}  # rows
+    attack_boards = [1, 0] # selected home board column is index to attack column
 
     def __init__(self, parent, x, y):
         # ttk.Frame.__init__(self, parent)
         super().__init__(parent) # create a frame (self)
 
-        # self.vsb = ttk.Scrollbar(parent, orient='vertical', command=self.yview)
-        # self.hsb = ttk.Scrollbar(parent, orient='horizontal', command=self.xview)
-        # self.configure(yscrollcommand=self.vsb.set, xscrollcommand=self.hsb.set)
-        # # self.grid(column=0, row=0, sticky='nsew', in_=parent)
-        # # vsb.grid(column=1, row=0, sticky='ns', in_=parent)
-        # # hsb.grid(column=0, row=1, sticky='ew', in_=parent)
-        # self.vsb.pack()
-        # self.hsb.pack()
-
-        # self.vsb = ttk.Scrollbar(self, orient="vertical", command=self.yview)  # place a scrollbar on self
-        # self.configure(yscrollcommand=self.vsb.set)  # attach scrollbar action to scroll of canvas
-        # self.vsb.pack(side="right", fill="y")
-        # self.config(bd=10, bg='blue')
         self.capture_count = {'black': 0, 'white': 0}
-        self.capture_black = []
-        self.capture_white = []
+        self.capture_black = set
+        self.capture_white = set
         self.blocks = [[0,1],[2,3]]
         self.move_history = [] # (move, push)
+        self.game_over = False
 
         self.images = dict(empty=self.make_image('image/emptycell.png'),
                            black=self.make_image('image/blackStone.png'),
@@ -314,12 +295,25 @@ class Board(tkinter.Canvas):
         self.home_move = None  # MOVE_STONE
         self.attack_move = None  # MOVE_STONE
 
-        # test capture block
-        # self.capture('white', (0,0))
-        # self.capture('black', (3,3))
-        # self.capture('white', (0,0))
-        # self.capture('black', (3,3))
         pass
+
+    def set_player(self, color):
+        """
+        save color as current player
+        highlight home boards for current player
+
+        :param color:
+        :return:
+        """
+        self.current_player = color
+        self.from_cell = None  # CELL
+        self.home_move = None  # MOVE_STONE
+        self.attack_move = None  # MOVE_STONE
+
+        # home blocks for white are [1][0] and [1][1]
+        # change style to highlight
+        for block_column in range(2):
+            self.blocks[block_column][self.home_boards[color]]['style'] = 'active.block.TFrame'
 
     def set_cell(self, block_column, block_row, cell_column, cell_row, color):
         """
@@ -384,32 +378,6 @@ class Board(tkinter.Canvas):
             capture.grid(column=each+column, row=row)
             capture_cells.append(capture)
         return capture_cells
-
-    def highlight_home_blocks(self, player):
-        """
-        add border around home blocks for player
-
-        :param player:
-        :return:
-        """
-        pass
-
-    def highlight_attack_blocks(self, home_block):
-        """
-        add border around attack blocks using home_block
-
-        :param home_block:
-        :return:
-        """
-        pass
-
-    def click_move(self):
-        """
-        update blocks and capture if push off block
-        render blocks and capture stones
-        :return:
-        """
-        pass
 
     def set_board(self, white_stones, black_stones):
         """
@@ -524,19 +492,21 @@ class Cell(ttk.Frame):
 
     def select_stone(self):
         """
-        First click:
+        First click: home cell is None
             clear highlights
-            Has player stone: false: ignore click
+            cell has player stone: false: ignore click
             select stone to move
             highlight cell: green
 
-        Second click:
+        Second click: home cell is not None
             destination cell
             if legal move from first cell to cell: highlight destination cell: green
             else: status error, highlight destination cell: red
 
-        Third click:
+        Third click: home destination is not None
             attack origin cell
+            calculate attack destination cell
+            verify 0 or 1 opponent's stones are pushed
             {details}
 
         :return:
@@ -726,7 +696,8 @@ class Application(tkinter.Tk):
         style.configure("BW.TLabel", foreground="green", highlightcolor='red', background="black", height=200, bd=40, font=('Helvetica', 30))
         style.configure("f.BW.TLabel", foreground="magenta",  relief='raised')
         style.configure("selected.TLabel", foreground="magenta",  relief='raised')
-        style.configure("block.TFrame", foreground="magenta", bd=20, bg='red',  relief='raised', borderwidth=20)
+        style.configure("block.TFrame", foreground="magenta", bd=20, bg='red',  relief='sunken', borderwidth=20)
+        style.configure("active.block.TFrame", relief='raised')
         style.configure("BW.TFrame", foreground="blue", background="white", height=200, bd=10)
         style.configure('blue.TFrame', highlightbackground="red", highlightcolor="black", highlightthickness=10, width=1000,
                        height=300, bd=30, bg='black',)
@@ -750,8 +721,14 @@ class Application(tkinter.Tk):
 
         self.tool_bar = ToolBar(self)
         self.tool_bar.pack(side='top', fill='x')
+        self.main_frame = MainFrame(self)
+        self.main_frame.pack(side='top', fill='y')
+
         self.board_frame = Board(self, 0, 0)
         self.board_frame.pack(side='left', fill='y')
+
+        # select start player (black or white)
+        self.board_frame.set_player('white') # default to white
 
 # Status bar selection == 'y'
     def uptime(self):

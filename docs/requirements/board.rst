@@ -46,11 +46,43 @@ Consider flipping blocks for each player to have **home** boards on bottom.
             Future: Check if move is legal, does not push stone
         * Future: Draw arrow from original cell to destination cell
     * Enter Attack movement
-        * Highlight Attack blocks and enable selecting cells
         * Select cell with player stone, Highlight cell, make bold
-        * Select destination cell.
-            Future: Check if move is legal, pushes stone 0 or 1 stones.
+        * highlight attack destination cell and pushed stone
         * Future: Draw arrow from original cell to destination cell
     * Enable make turn button
     * Click make turn button to Take Turn
 * Render movement arrow
+
+todo:
+    * setup turn actions:
+        * click on valid destination cell:
+            * restore style for home boards
+            * set select style for attack boards
+        * click on home destination cell:
+            * reset style of attack boards
+            * set active style of home boards
+            * clear home destination cell and all attack cells
+        * click on home stone:
+            * reset style of attack boards
+            * set active style of home boards
+            * clear home stone, home destination cell and all attack cells
+        * click on valid attack stone:
+            * highlight attack destination cell
+            * highlight pushed stone (future)
+            * Enable move button
+        * click on second valid attack stone:
+            * clear old attack cells
+            * do continue with valid attack stone steps
+
+    * click on move button
+        * add move to history
+        * set new home cell with color stone
+        * set old home cell with empty color
+        * set new attack cell with color stone
+        * if new moved stone on board:
+            * set new moved stone cell with color stone
+        * set old moved stone to empty
+        * if new moved stone off board:
+            * add board and color to captured stones
+            * if game over: go to victory
+        * set board for othe color move

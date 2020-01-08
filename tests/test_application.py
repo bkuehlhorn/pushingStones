@@ -51,8 +51,8 @@ class TestBasicApplication(unittest.TestCase):
         """
         proper startup of application
         """
-        assert_that(self.app.mainframe.display.cget('text'), starts_with('Cookiecutter: Open-Source Project Templates'))
-        assert_that(self.app.mainframe.display.cget('text'), contains_string('pushing stones'))
+        assert_that(self.app.main_frame.display.cget('text'), starts_with('Cookiecutter: Open-Source Project Templates'))
+        assert_that(self.app.main_frame.display.cget('text'), contains_string('pushing stones'))
 
     def test_click_button1(self):
         """
@@ -71,7 +71,7 @@ class TestBasicApplication(unittest.TestCase):
         Invoke action of b1 button
         :return:
         """
-        self.app.children['b1'].invoke()
+        self.app.main_frame.children['b1'].invoke()
         assert_that(self.app.statusbar.labels[0].cget('text'), equal_to('Unset status 1'))
         assert_that(self.app.statusbar.labels[1].cget('text'), equal_to('Unset status 2'))
         assert_that(self.app.statusbar.labels[2].cget('text'), equal_to('Uptime: 0'))
@@ -84,7 +84,7 @@ class TestBasicApplication(unittest.TestCase):
         Invoke action of b2 button
         :return:
         """
-        self.app.children['b2'].invoke()
+        self.app.main_frame.children['b2'].invoke()
         assert_that(self.app.statusbar.labels[0].cget('text'), equal_to('Unset status 1'))
         assert_that(self.app.statusbar.labels[1].cget('text'), equal_to('Unset status 2'))
         assert_that(self.app.statusbar.labels[2].cget('text'), equal_to('Uptime: 0'))
