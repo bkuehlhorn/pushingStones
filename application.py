@@ -255,7 +255,7 @@ class Board(tkinter.Canvas):
 
         for column in range(2):
             for row in range(2):
-                block = Block(self, column, row, self.images, 0, 0)
+                block = Block(self, column, row, self.images, 0, 0, name=f'block:{column}:{row}')
                 block.grid(column=column*6, row=row*10+2, columnspan=6)
                 self.blocks[column][row] = block
 
@@ -291,11 +291,16 @@ class Board(tkinter.Canvas):
         self.move_button = tkinter.Button(self, text=f'make move', name=f'make move', command=self.make_moves)
         self.move_button.grid(column=5, row=13)
 
-        self.from_cell = None  # CELL
-        self.home_move = None  # MOVE_STONE
-        self.attack_move = None  # MOVE_STONE
+        self.move = None
 
         pass
+
+    def get_block_style(self):
+        blocks_style = [
+            [self.blocks[0][0]['style'], self.blocks[1][0]['style'],],
+            [self.blocks[0][1]['style'], self.blocks[1][1]['style'],]
+        ]
+        return blocks_style
 
     def set_player(self, color):
         """
@@ -310,10 +315,25 @@ class Board(tkinter.Canvas):
         self.home_move = None  # MOVE_STONE
         self.attack_move = None  # MOVE_STONE
 
+        self.set_home_active(self.current_player)
+
+    def set_blocks_style(self, style='block.TFrame'):
+        # change style for all blocks
+        for block_column in range(2):
+            for block_row in range(2):
+                self.blocks[block_column][block_row]['style'] = style
+
+    def set_home_active(self, color, style='active.block.TFrame'):
         # home blocks for white are [1][0] and [1][1]
         # change style to highlight
         for block_column in range(2):
-            self.blocks[block_column][self.home_boards[color]]['style'] = 'active.block.TFrame'
+            self.blocks[block_column][self.home_boards[color]]['style'] = style
+
+    def set_attack_active(self, home_move_board, style='active.block.TFrame'):
+        # home blocks for white are [1][0] and [1][1]
+        # change style to highlight
+        for block_row in range(2):
+            self.blocks[self.attack_boards[home_move_board]][block_row]['style'] = style
 
     def set_cell(self, block_column, block_row, cell_column, cell_row, color):
         """
@@ -428,9 +448,9 @@ class Block(ttk.Frame):
     Block of 4x4 cells
     Render buttons for cells starting a x, y of parent.
     """
-    def __init__(self, parent, block_column, block_row, images, column=0, row=0):
+    def __init__(self, parent, block_column, block_row, images, column=0, row=0, name=''):
         # ttk.Frame.__init__(self, parent, borderwidth=20)
-        ttk.Frame.__init__(self, parent, style='block.TFrame', borderwidth=20)
+        ttk.Frame.__init__(self, parent, style='block.TFrame', borderwidth=20, name=name)
         self.cell_image = images
 
         button_size = 20
@@ -439,7 +459,7 @@ class Block(ttk.Frame):
         for cell_row in range(4):
             row_cells = []
             for cell_column in range(4):
-                cell = Cell(self, color='empty', name=f'{cell_row}:{cell_column}')
+                cell = Cell(self, color='empty', name=f'{name}:{cell_row}:{cell_column}')
                 cell.grid(column=cell_column, row=cell_row)
                 row_cells.append(cell)
             self.cells.append(row_cells)
@@ -514,7 +534,16 @@ class Cell(ttk.Frame):
         s = ttk.Style()
         s.configure('Select.TButton', font='helvetica 24', foreground='red', padding=10)
         self['style'] = 'selected.TLabel' if self['style'] is '' else ''
-        self.master['style'] = 'block.TFrame' if self.master['style'] is '' else ''
+        # self.master['style'] = 'block.TFrame' if self.master['style'] is '' else ''
+
+        color = self.master.master.player
+        if self.master.master.move is None:
+            name = self._name.split(':')
+            self.master.master.set_blocks_style()
+            # self.master.master.set_home_active(color, style='block.TFrame')
+            self.master.master.set_attack_active(int(name[1]), style='active.block.TFrame')
+            # block_styles = self.master.master.get_block_style()
+            pass
         pass
 
 
