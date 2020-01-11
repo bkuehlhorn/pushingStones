@@ -45,6 +45,23 @@ class TestSelectingStones(unittest.TestCase):
     def tearDown(self):
         self.app.destroy()
 
+    def test_white_stones_start(self):
+        """
+        Initial setup with White stones active
+
+        Verify:
+            White home blocks active
+            Black home blocks inactive
+
+        :return:
+        """
+        initial_block_styles = [
+            ['active.block.TFrame', 'block.TFrame'],
+            ['active.block.TFrame', 'block.TFrame'],
+        ]
+        block_styles = self.app.board_frame.get_block_style()
+        assert_that(block_styles, equal_to(initial_block_styles))
+
     def test_select_own_home_stone(self):
         """
         Select home stone of own color
@@ -58,11 +75,24 @@ class TestSelectingStones(unittest.TestCase):
         block_loc = BLOCK(0, 0)
         cell_loc = CELL(0, 0)
         verified = verify_cell_details(self.app, '', color, block_loc, cell_loc)
-        select_results = select_stone(self.app, color, block_loc, cell_loc)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
+        select_results = select_stone(self.app, color, block_loc, cell_loc)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+
         verified = verify_cell_details(self.app, 'selected.TLabel', color, block_loc, cell_loc)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
+        assert_that(statusbar_text(self.app), equal_to([f'{color}',
+                                                        f'block {block_loc.column} {block_loc.row} {cell_loc.column} {cell_loc.row}',
+                                                        f'white',
+                                                        f''
+                                                        ]))
+
+        assert_that(statusbar_text(self.app, 0), equal_to(f'{color}'))
+        assert_that(statusbar_text(self.app, 1), equal_to(f'block {block_loc.column} {block_loc.row} {cell_loc.column} {cell_loc.row}'))
+        assert_that(statusbar_text(self.app, 2), equal_to(f'white'))
+        assert_that(statusbar_text(self.app, 3), equal_to(f''))
 
     def test_select_empty_home_stone(self):
         """
@@ -77,9 +107,22 @@ class TestSelectingStones(unittest.TestCase):
         block_loc = BLOCK(0, 0)
         cell_loc = CELL(1, 0)
         verified = verify_cell_details(self.app, '', color, block_loc, cell_loc)
-        select_results = select_stone(self.app, color, block_loc, cell_loc)
         assert_that(verified, starts_with('Cell not expected color'))
+
+        select_results = select_stone(self.app, color, block_loc, cell_loc)
+        assert_that(select_results, equal_to(f'Cell not expected color: expected: {color}, actual: empty'), f'select_cell failed: {select_results}')
         assert_that(verified, contains_string('empty'))
+
+        assert_that(statusbar_text(self.app), equal_to([f'Unset status 1',
+                                                        f'Unset status 2',
+                                                        f'Unset status 3',
+                                                        f'Unset status 4'
+                                                        ]))
+
+        assert_that(statusbar_text(self.app, 0), equal_to(f'Unset status 1'))
+        assert_that(statusbar_text(self.app, 1), equal_to(f'Unset status 2'))
+        assert_that(statusbar_text(self.app, 2), equal_to(f'Unset status 3'))
+        assert_that(statusbar_text(self.app, 3), equal_to(f'Unset status 4'))
 
     def test_select_other_home_stone(self):
         """
@@ -94,9 +137,22 @@ class TestSelectingStones(unittest.TestCase):
         block_loc = BLOCK(0, 0)
         cell_loc = CELL(3, 0)
         verified = verify_cell_details(self.app, '', color, block_loc, cell_loc)
-        select_results = select_stone(self.app, color, block_loc, cell_loc)
         assert_that(verified, starts_with('Cell not expected color'))
         assert_that(verified, contains_string('black'))
+
+        select_results = select_stone(self.app, color, block_loc, cell_loc)
+        assert_that(select_results, equal_to(f'Cell not expected color: expected: {color}, actual: black'), f'select_cell failed: {select_results}')
+
+        assert_that(statusbar_text(self.app), equal_to([f'Unset status 1',
+                                                        f'Unset status 2',
+                                                        f'Unset status 3',
+                                                        f'Unset status 4'
+                                                        ]))
+
+        assert_that(statusbar_text(self.app, 0), equal_to(f'Unset status 1'))
+        assert_that(statusbar_text(self.app, 1), equal_to(f'Unset status 2'))
+        assert_that(statusbar_text(self.app, 2), equal_to(f'Unset status 3'))
+        assert_that(statusbar_text(self.app, 3), equal_to(f'Unset status 4'))
 
     def test_stones_in_setup_board(self):
         """

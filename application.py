@@ -30,10 +30,14 @@ MOVE_STONES = namedtuple('MOVE_STONES', 'home_move, attack_move')
 _ = lambda s: s
 __ = lambda s: ' '.join(s)
 def VALID_BLOCK(block):
-    return (block.column > -1 and block.column < 2) and (block.row > -1 and block.row < 2)
+    return ( -1 < block.column < 2) and (-1 < block.row < 2)
 def VALID_CELL(cell):
-    return (cell.column > -1 and cell.column < 4) and (cell.row > -1 and cell.row < 4)
-
+    return (-1 < cell.column < 4) and (-1 < cell.row < 4)
+def LOG_STATUSBAR(widget, index=0, text='testing'):
+    master = widget
+    while master.winfo_name() != '!board': # find Board widget
+        master = master.master
+    master.master.statusbar.set_text(index, text)
 
 class MoveStone(object):
     def __init__(self, from_cell):
@@ -296,10 +300,7 @@ class Board(tkinter.Canvas):
         pass
 
     def get_block_style(self):
-        blocks_style = [
-            [self.blocks[0][0]['style'], self.blocks[1][0]['style'],],
-            [self.blocks[0][1]['style'], self.blocks[1][1]['style'],]
-        ]
+        blocks_style = list(map(lambda x: list(map(lambda y: y['style'], x)), self.blocks))
         return blocks_style
 
     def set_player(self, color):
@@ -531,14 +532,20 @@ class Cell(ttk.Frame):
 
         :return:
         """
+        color = self.master.master.player
+        name = self.winfo_name().split(':')
+
+        LOG_STATUSBAR(self, text=color)
+        LOG_STATUSBAR(self, 1, name)
+        LOG_STATUSBAR(self, 2, self.button.cget('text'))
+        LOG_STATUSBAR(self, 3, self['style'])
+
         s = ttk.Style()
         s.configure('Select.TButton', font='helvetica 24', foreground='red', padding=10)
         self['style'] = 'selected.TLabel' if self['style'] is '' else ''
         # self.master['style'] = 'block.TFrame' if self.master['style'] is '' else ''
 
-        color = self.master.master.player
         if self.master.master.move is None:
-            name = self._name.split(':')
             self.master.master.set_blocks_style()
             # self.master.master.set_home_active(color, style='block.TFrame')
             self.master.master.set_attack_active(int(name[1]), style='active.block.TFrame')
@@ -739,12 +746,12 @@ class Application(tkinter.Tk):
 
         self.statusbar = StatusBar(self)
         self.statusbar.pack(side='bottom', fill='x')
-        self.bind_all('<Enter>',
-                      lambda e: self.statusbar.set_text(0, 'Mouse: 1'))
-        self.bind_all('<Leave>',
-                      lambda e: self.statusbar.set_text(0, 'Mouse: 0'))
-        self.bind_all('<Button-1>',
-                      lambda e: self.statusbar.set_text(1, 'Clicked at x = ' + str(e.x) + ' y = ' + str(e.y)))
+        # self.bind_all('<Enter>',
+        #               lambda e: self.statusbar.set_text(0, 'Mouse: 1'))
+        # self.bind_all('<Leave>',
+        #               lambda e: self.statusbar.set_text(0, 'Mouse: 0'))
+        # self.bind_all('<Button-1>',
+        #               lambda e: self.statusbar.set_text(1, 'Clicked at x = ' + str(e.x) + ' y = ' + str(e.y)))
         self.start_time = datetime.datetime.now()
         self.uptime()
 
@@ -762,9 +769,8 @@ class Application(tkinter.Tk):
 # Status bar selection == 'y'
     def uptime(self):
         _upseconds = str(int(round((datetime.datetime.now() - self.start_time).total_seconds())))
-        self.statusbar.set_text(2, _('Uptime') + ': ' + _upseconds)
+        # self.statusbar.set_text(2, _('Uptime') + ': ' + _upseconds)
         self.after(1000, self.uptime)
-
 
 if __name__ == '__main__':
     APPLICATION_GUI = Application()

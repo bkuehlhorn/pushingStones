@@ -1,6 +1,10 @@
 
 from application import Application, VALID_BLOCK, VALID_CELL, BLOCK, CELL
 
+def statusbar_text(app, index=None):
+    if index is None:
+        return list(map(lambda x: x.cget('text'), app.statusbar.labels))
+    return app.statusbar.labels[index].cget('text')
 
 def select_stone(app, color, block, cell):
     """
@@ -30,6 +34,7 @@ def select_stone(app, color, block, cell):
         return f'Cell not expected color: expected: {color}, actual: {app_cell.cget("text")}'
     app_cell.button.invoke()
     error = ''
+
     return error
 
 def verify_cell_details(app, style, color, block, cell):
