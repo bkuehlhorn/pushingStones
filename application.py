@@ -33,11 +33,8 @@ def VALID_BLOCK(block):
     return ( -1 < block.column < 2) and (-1 < block.row < 2)
 def VALID_CELL(cell):
     return (-1 < cell.column < 4) and (-1 < cell.row < 4)
-def LOG_STATUSBAR(widget, index=0, text='testing'):
-    master = widget
-    while master.winfo_name() != '!board': # find Board widget
-        master = master.master
-    master.master.statusbar.set_text(index, text)
+def LOG_STATUSBAR(application, index=0, text='testing'):
+    application.statusbar.set_text(index, text)
 
 class MoveStone(object):
     def __init__(self, from_cell):
@@ -203,6 +200,7 @@ class Board(tkinter.Canvas):
     Design:
         Render: board, blocks, cells and cell button
         Highlight: Home Blocks, Attack Blocks, Origin Cell, Destination Cell
+
         methods:
             undo: backout history move
             redo: do history again
@@ -221,6 +219,7 @@ class Board(tkinter.Canvas):
                     highlight cell,
                     save column and row for destination home block
                     highlight attack blocks
+
             else if home origin cell is not empty and attack origin cell is same color:
                 highlight cell,
                 save column and row for destination home block,
@@ -228,6 +227,7 @@ class Board(tkinter.Canvas):
                 calculate attack destination cell and highlight
                 if is attack destination cell off board or attack pushes 2 stones or (maybe) pushes own stone:
                     report error, highlight cells, action is home destination cell
+
                 else:
                     highlight cell,
                     save column and row for origin attack block,
@@ -245,6 +245,8 @@ class Board(tkinter.Canvas):
     def __init__(self, parent, x, y):
         # ttk.Frame.__init__(self, parent)
         super().__init__(parent) # create a frame (self)
+        self.application = self.master
+
 
         self.capture_count = {'black': 0, 'white': 0}
         self.capture_black = set
@@ -355,12 +357,12 @@ class Board(tkinter.Canvas):
             move pushed attack stone: empty origin cell, (color destination cell or add pushed off stones to capture images)
             attack stone moves: empty origin cell, color destination cell
             save push for history
-
             player is other color
             highlight home blocks for player
         add to self.move_history: move, push
 
         :return:
+
         """
         return True
 
@@ -449,9 +451,13 @@ class Block(ttk.Frame):
     Block of 4x4 cells
     Render buttons for cells starting a x, y of parent.
     """
+
     def __init__(self, parent, block_column, block_row, images, column=0, row=0, name=''):
         # ttk.Frame.__init__(self, parent, borderwidth=20)
         ttk.Frame.__init__(self, parent, style='block.TFrame', borderwidth=20, name=name)
+        self.application = self.master.master
+        self.board = self.master
+
         self.cell_image = images
 
         button_size = 20
@@ -500,6 +506,10 @@ class Cell(ttk.Frame):
         :param y: row
         """
         ttk.Frame.__init__(self, parent, *args, **kwargs)
+        self.application = self.master.master.master
+        self.board = self.master.master
+        self.block = self.master
+
         image = self.master.cell_image[color]
         self.button = CellButton(parent, *args, image=image, text=color, command=partial (self.select_stone), **kwargs)
 
@@ -535,10 +545,10 @@ class Cell(ttk.Frame):
         color = self.master.master.player
         name = self.winfo_name().split(':')
 
-        LOG_STATUSBAR(self, text=color)
-        LOG_STATUSBAR(self, 1, name)
-        LOG_STATUSBAR(self, 2, self.button.cget('text'))
-        LOG_STATUSBAR(self, 3, self['style'])
+        LOG_STATUSBAR(self.application, text=color)
+        LOG_STATUSBAR(self.application, 1, name)
+        LOG_STATUSBAR(self.application, 2, self.button.cget('text'))
+        LOG_STATUSBAR(self.application, 3, self['style'])
 
         s = ttk.Style()
         s.configure('Select.TButton', font='helvetica 24', foreground='red', padding=10)
@@ -559,6 +569,18 @@ class CellButton(ttk.Button):
     Button where stones are placed and moved.
 
     """
+    def application(self):
+        return self.master.master.master.master
+
+    def board(self):
+        return self.master.master.master
+
+    def block(self):
+        return self.master.master
+
+    def cell(self):
+        return self.master
+
     def __init__(self, parent, *args, **kwargs):
         """
         Block, images and location for cell
