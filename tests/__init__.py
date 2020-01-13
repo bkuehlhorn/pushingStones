@@ -6,7 +6,7 @@ def statusbar_text(app, index=None):
         return list(map(lambda x: x.cget('text'), app.statusbar.labels))
     return app.statusbar.labels[index].cget('text')
 
-def select_stone(app, color, block, cell):
+def select_cell(app, color, cell):
     """
     select colored stone on block and cell location
 
@@ -23,11 +23,10 @@ def select_stone(app, color, block, cell):
 
     :param app: pushing stones app
     :param color: black, white, empty
-    :param block:
     :param cell: column, row
     :return: true (verified), false(problem) - may return empty for true and description for error
     """
-    app_cell = find_cell(app, block, cell)
+    app_cell = find_cell(app, cell)
     if app_cell is None:
         return 'Cell not found. may be invalid column and row in block or cell'
     if app_cell.cget('text') != color:
@@ -37,7 +36,7 @@ def select_stone(app, color, block, cell):
 
     return error
 
-def verify_cell_details(app, style, color, block, cell):
+def verify_cell_details(app, style, color, cell):
     """
     verify block, cell is in state.
     verify block, cell has color
@@ -45,12 +44,11 @@ def verify_cell_details(app, style, color, block, cell):
     :param app: pushing stones app
     :param style: cell style used for highlighted or normal
     :param color: black, white, empty
-    :param block:
     :param cell: column, row
     :return: true (verified), false(problem) - may return empty for true and description for error
     """
     error = ''
-    found_cell = find_cell(app, block, cell)
+    found_cell = find_cell(app, cell)
     if found_cell is None:
         return 'Cell not found. may be invalid column and row in block or cell'
     # verify state: raised or normal
@@ -61,17 +59,16 @@ def verify_cell_details(app, style, color, block, cell):
 
     return error
 
-def find_cell(app, block, cell):
+def find_cell(app, cell):
     """
     find cell in block on board in app
 
     :param app: pushing stones app
-    :param block: (0-1), (0-1)
-    :param cell: (0-3), (0-3)
+    :param cell: block, (0-3), (0-3)
     :return: null if no cell found (bad block values, bad cell values
     """
-    if VALID_BLOCK(block) and VALID_CELL(cell):
-        app_block = app.board_frame.blocks[block.column][block.row]
+    if VALID_BLOCK(cell.block) and VALID_CELL(cell):
+        app_block = app.board_frame.blocks[cell.block.column][cell.block.row]
         app_cell = app_block.cells[cell.column][cell.row]
         return app_cell
     else:
@@ -101,3 +98,7 @@ def verify_cells(app, color, stones_list, captured=None):
 
     # verify captured stones
     return errors
+
+def cell_status(cell):
+    # f'block {block_loc.column} {block_loc.row} {dest_cell.column} {dest_cell.row}',
+    return f'block {cell.block.column} {cell.block.row} {cell.column} {cell.row}'

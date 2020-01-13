@@ -23,8 +23,8 @@ from tkinter.filedialog import askopenfilename
 # english
 
 BLOCK = namedtuple('BLOCK', 'column, row')
-CELL = namedtuple('CELL', 'column row')
-MOVE_STONES = namedtuple('MOVE_STONES', 'home_move, attack_move')
+CELL = namedtuple('CELL', 'block column row')
+DIRECTION = namedtuple('DIRECTION', 'column_delta, row_delta')
 
 
 _ = lambda s: s
@@ -36,9 +36,29 @@ def VALID_CELL(cell):
 def LOG_STATUSBAR(application, index=0, text='testing'):
     application.statusbar.set_text(index, text)
 
-class MoveStone(object):
-    def __init__(self, from_cell):
-        self.from_cell = from_cell
+class MoveStones(object):
+    """
+    Support to move stones on home and attack boards.
+        * saves home_cell, attack_cell, direction, distance
+        * verify destination cell on block and valid cell
+        * verify attack_cell moves on block and pushes 0 or 1 other stones
+    """
+    def __init__(self, home_cell):
+        self.home_cell = home_cell
+        self.attack_cell = None
+        self.direction = None
+        self.distance = None
+
+    def __str__(self):
+        return f'home={self.home_cell}:attack={self.attack_cell}:direction={self.direction}:distance={self.distance}'
+
+    def add_attack_cell(self, cell):
+        self.attack_cell = cell
+        return None
+
+    def add_direction(self, direction):
+        self.direction = direction
+        return None
 
     def add_to_cell(self, to_cell):
         self.to_cell = to_cell
@@ -47,7 +67,7 @@ class MoveStone(object):
         self.direction = max(abs(self.rowDelta), abs(self.columnDelta))
         return
 
-    def use_distance(self, direction, distance):
+    def use_distance(self, block, direction, distance):
         """
         possible to save pushed cells. one for each distance
         :param direction:
@@ -56,7 +76,8 @@ class MoveStone(object):
         """
         self.direction = direction
         self.distance = distance
-        self.to_cell = CELL(self.from_cell.column + self.distance.columnDelta * self.distance,
+        self.to_cell = CELL(block,
+                            self.from_cell.column + self.distance.columnDelta * self.distance,
                             self.from_cell.row + self.distance.rowDelta * self.distance)
         self.pushed_cells = [] # one or two cells are pushed
         return VALID_CELL(self.to_cell)
@@ -281,21 +302,24 @@ class Board(tkinter.Canvas):
         # self.set_board(initial_white_stones_test, initial_black_stones_test)
 
         initial_white_stones = {
-            '0,0': [CELL(0, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
-            '0,1': [CELL(0, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
-            '1,0': [CELL(0, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
-            '1,1': [CELL(0, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)]
+            '0,0': [CELL(BLOCK(0,0), 0, 0), CELL(BLOCK(0,0), 0, 1), CELL(BLOCK(0,0), 0, 2), CELL(BLOCK(0,0), 0, 3)],
+            '0,1': [CELL(BLOCK(0,1), 0, 0), CELL(BLOCK(0,1), 0, 1), CELL(BLOCK(0,1), 0, 2), CELL(BLOCK(0,1), 0, 3)],
+            '1,0': [CELL(BLOCK(1,0), 0, 0), CELL(BLOCK(1,0), 0, 1), CELL(BLOCK(1,0), 0, 2), CELL(BLOCK(1,0), 0, 3)],
+            '1,1': [CELL(BLOCK(0,1), 0, 0), CELL(BLOCK(1,1), 0, 1), CELL(BLOCK(1,1), 0, 2), CELL(BLOCK(1,1), 0, 3)]
         }
         initial_black_stones = {
-            '0,0': [CELL(3, 0), CELL(3, 1), CELL(3, 2), CELL(3, 3)],
-            '0,1': [CELL(3, 0), CELL(3, 1), CELL(3, 2), CELL(3, 3)],
-            '1,0': [CELL(3, 0), CELL(3, 1), CELL(3, 2), CELL(3, 3)],
-            '1,1': [CELL(3, 0), CELL(3, 1), CELL(3, 2), CELL(3, 3)]
+            '0,0': [CELL(BLOCK(0,0), 3, 0), CELL(BLOCK(0,0), 3, 1), CELL(BLOCK(0,0), 3, 2), CELL(BLOCK(0,0), 3, 3)],
+            '0,1': [CELL(BLOCK(0,1), 3, 0), CELL(BLOCK(0,1), 3, 1), CELL(BLOCK(0,1), 3, 2), CELL(BLOCK(0,1), 3, 3)],
+            '1,0': [CELL(BLOCK(1,0), 3, 0), CELL(BLOCK(1,0), 3, 1), CELL(BLOCK(1,0), 3, 2), CELL(BLOCK(1,0), 3, 3)],
+            '1,1': [CELL(BLOCK(0,1), 3, 0), CELL(BLOCK(1,1), 3, 1), CELL(BLOCK(1,1), 3, 2), CELL(BLOCK(1,1), 3, 3)]
         }
         self.set_board(initial_white_stones, initial_black_stones)
 
-        self.move_button = tkinter.Button(self, text=f'make move', name=f'make move', command=self.make_moves)
+        self.move_button = ttk.Button(self, text=f'clear moves', name=f'clear moves', command=self.clear_moves)
         self.move_button.grid(column=5, row=13)
+
+        self.move_button = ttk.Button(self, text=f'make move', name=f'make move', command=self.make_moves)
+        self.move_button.grid(column=6, row=13)
 
         self.move = None
 
@@ -314,9 +338,10 @@ class Board(tkinter.Canvas):
         :return:
         """
         self.current_player = color
-        self.from_cell = None  # CELL
-        self.home_move = None  # MOVE_STONE
-        self.attack_move = None  # MOVE_STONE
+        # self.from_cell = None  # CELL
+        # self.home_move = None  # MOVE_STONE
+        # self.attack_move = None  # MOVE_STONE
+        self.move = None
 
         self.set_home_active(self.current_player)
 
@@ -332,11 +357,11 @@ class Board(tkinter.Canvas):
         for block_column in range(2):
             self.blocks[block_column][self.home_boards[color]]['style'] = style
 
-    def set_attack_active(self, home_move_board, style='active.block.TFrame'):
+    def set_attack_active(self, block, style='active.block.TFrame'):
         # home blocks for white are [1][0] and [1][1]
         # change style to highlight
         for block_row in range(2):
-            self.blocks[self.attack_boards[home_move_board]][block_row]['style'] = style
+            self.blocks[self.attack_boards[block.column]][block_row]['style'] = style
 
     def set_cell(self, block_column, block_row, cell_column, cell_row, color):
         """
@@ -349,6 +374,15 @@ class Board(tkinter.Canvas):
         :return:
         """
         self.blocks[block_column][block_row].cells[cell_column][cell_row].set_cell(color)
+
+    def clear_moves(self):
+        """
+        Reset board for new move: clear cell styles and set home blocks to active
+
+        :return:
+
+        """
+        return True
 
     def make_moves(self):
         """
@@ -491,6 +525,13 @@ class Block(ttk.Frame):
         """
         return self.cells[column][row].cget('text') == color
 
+    def all_styles(self):
+        # return list(map(lambda x: list(map(lambda y: f'{self}:{y}', x)), list(self.cells)))
+        return list(map(lambda x: list(map(lambda y: f'{self} style:{y["style"]}', x)), list(self.cells)))
+
+    def all_text(self):
+        # return list(map(lambda x: list(map(lambda y: f'{self}:{y}', x)), list(self.cells)))
+        return list(map(lambda x: list(map(lambda y: f'{self} contents:{y.cget("text")}', x)), list(self.cells)))
 
 class Cell(ttk.Frame):
     """
@@ -542,25 +583,72 @@ class Cell(ttk.Frame):
 
         :return:
         """
-        color = self.master.master.player
+        s = ttk.Style()
+        color = self.board.player
         name = self.winfo_name().split(':')
+        # look for a better way
+        (_, block_column, block_row, cell_column, cell_row) = name
+        block = BLOCK(int(block_column), int(block_row))
+        cell = CELL(block, int(cell_column), int(cell_row))
+
+        if not VALID_BLOCK(block) or not VALID_CELL(cell):
+            LOG_STATUSBAR(self.application, 3, f'invalid cell {name}')
+            return
 
         LOG_STATUSBAR(self.application, text=color)
         LOG_STATUSBAR(self.application, 1, name)
         LOG_STATUSBAR(self.application, 2, self.button.cget('text'))
-        LOG_STATUSBAR(self.application, 3, self['style'])
+        # LOG_STATUSBAR(self.application, 3, self['style'])
+        if self['style'] == 'selected.TLabel':
+            LOG_STATUSBAR(self.application, 3, f'Please select another cell')
+            self['style'] = ''
+            self.board.move = None
+            return
 
-        s = ttk.Style()
-        s.configure('Select.TButton', font='helvetica 24', foreground='red', padding=10)
-        self['style'] = 'selected.TLabel' if self['style'] is '' else ''
-        # self.master['style'] = 'block.TFrame' if self.master['style'] is '' else ''
+        if self.board.move is None:
+            if color != self.button.cget('text'):
+                LOG_STATUSBAR(self.application, 3, f'Please select your own stone')
+                return
 
-        if self.master.master.move is None:
-            self.master.master.set_blocks_style()
-            # self.master.master.set_home_active(color, style='block.TFrame')
-            self.master.master.set_attack_active(int(name[1]), style='active.block.TFrame')
-            # block_styles = self.master.master.get_block_style()
+            self.board.move = MoveStones(home_cell=cell)
+            LOG_STATUSBAR(self.application, 3, f'Please select destination cell')
+            self['style'] = 'selected.TLabel'
             pass
+        elif self.board.move.direction is None:
+            if 'empty' != self.button.cget('text'):
+                LOG_STATUSBAR(self.application, 3, f'Please select an empty cell')
+                return
+            if block != self.board.move.home_cell.block:
+                LOG_STATUSBAR(self.application, 3, f'Please cell on same block')
+                return
+            direction = DIRECTION(self.board.move.home_cell.column - cell.column,
+                                  self.board.move.home_cell.row - cell.row,
+                                  )
+            if abs(direction.column_delta) > 2 or abs(direction.row_delta > 2): # more complex
+                LOG_STATUSBAR(self.application, 3, f'Please cell closer to stone to move')
+                return
+
+            self['style'] = 'selected.TLabel'
+            self.board.set_blocks_style()
+            self.board.set_attack_active(self.board.move.home_cell.block, style='active.block.TFrame')
+            self.board.move.add_direction(direction=direction)
+            LOG_STATUSBAR(self.application, 3, f'Please your stone to move on attack blocks')
+        elif self.board.move.attack_cell == None:
+            '''
+            verify attack move:
+                On attack blocks
+                own stone
+                move destination on block
+                push 0 or 1 stone
+                push only other stone (check if push own is valid)
+                
+            '''
+            self['style'] = 'selected.TLabel'
+            # set style of attacked cells
+            self.board.set_blocks_style()
+            LOG_STATUSBAR(self.application, 2, f'tbd')
+            LOG_STATUSBAR(self.application, 3, f'Hit make move when done')
+
         pass
 
 
@@ -569,18 +657,6 @@ class CellButton(ttk.Button):
     Button where stones are placed and moved.
 
     """
-    def application(self):
-        return self.master.master.master.master
-
-    def board(self):
-        return self.master.master.master
-
-    def block(self):
-        return self.master.master
-
-    def cell(self):
-        return self.master
-
     def __init__(self, parent, *args, **kwargs):
         """
         Block, images and location for cell
@@ -591,6 +667,10 @@ class CellButton(ttk.Button):
         :param y: row
         """
         ttk.Button.__init__(self, parent, *args, **kwargs)
+        self.application = self.master.master.master.master
+        self.board = self.master.master.master
+        self.block = self.master.master
+
         # self.cell_image = images
 
 
