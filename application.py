@@ -191,13 +191,13 @@ class MainFrame(ttk.Frame):
         self.b2.pack(side='left')
 
     def click1(self):
-        print('Button 1 clicked.')
-        self.master.mainframe.tick('Button 1 clicked')
+        # print('Button 1 clicked.')
+        self.master.main_frame.tick('Button 1 clicked')
 
     def click2(self):
-        print('Button 2 clicked.')
+        # print('Button 2 clicked.')
         self.b1.invoke()
-        self.master.mainframe.tick('Button 2 clicked')
+        self.master.main_frame.tick('Button 2 clicked')
 
     def tick(self, button='none'):
         "Invoked automatically to update a clock displayed in the GUI."
@@ -624,7 +624,21 @@ class Cell(ttk.Frame):
             direction = DIRECTION(self.board.move.home_cell.column - cell.column,
                                   self.board.move.home_cell.row - cell.row,
                                   )
-            if abs(direction.column_delta) > 2 or abs(direction.row_delta > 2): # more complex
+            '''
+            following check is more complex
+            (abs(direction.column_delta) == abs(direction.row_delta) and abs(direction.column_delta) > 2)) or
+            (abs(direction.column_delta) == 0 and abs(direction.row_delta) > 2)) or
+            (abs(direction.row_delta) == 0 and abs(direction.column_delta) > 2)) or
+            (abs(direction.column_delta) != abs(direction.row_delta) and (abs(direction.column_delta) != 0 or
+                                                      abs(direction.row_delta) != 0))
+            
+            '''
+            # if abs(direction.column_delta) > 2 or abs(direction.row_delta > 2): # more complex
+            if (abs(direction.column_delta) == abs(direction.row_delta) and abs(direction.column_delta) > 2) or (
+                    abs(direction.column_delta) == 0 and abs(direction.row_delta) > 2) or (
+                    abs(direction.row_delta) == 0 and abs(direction.column_delta) > 2) or (
+                    (abs(direction.column_delta) != abs(direction.row_delta) and (
+                        abs(direction.column_delta) != 0 and abs(direction.row_delta) != 0))):
                 LOG_STATUSBAR(self.application, 3, f'Please cell closer to stone to move')
                 return
 

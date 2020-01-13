@@ -262,7 +262,7 @@ class TestSelectingStones(unittest.TestCase):
         attack_block_loc = BLOCK(1, 0)
         home_stone = CELL(home_block_loc, 0, 0)
         find_home_cell = find_cell(self.app, home_stone)
-        dest_cell = CELL(home_block_loc, 2, 0)
+        dest_cell = CELL(home_block_loc, 1, 0)
         find_dest_cell = find_cell(self.app, dest_cell)
         attack_stone = CELL(attack_block_loc, 0, 0)
         find_attack_cell = find_cell(self.app, attack_stone)
@@ -277,6 +277,37 @@ class TestSelectingStones(unittest.TestCase):
                                                         cell_status(dest_cell),
                                                         f'empty',
                                                         f'Please your stone to move on attack blocks'
+                                                        ]))
+
+    def test_select_home_destination_cell_invalid(self):
+        """
+
+
+        Verify:
+            Cell for home stone is highlighted
+
+        :return:
+        """
+        color = 'white'
+        home_block_loc = BLOCK(0, 0)
+        attack_block_loc = BLOCK(1, 0)
+        home_stone = CELL(home_block_loc, 0, 0)
+        find_home_cell = find_cell(self.app, home_stone)
+        dest_cell = CELL(home_block_loc, 2, 1)
+        find_dest_cell = find_cell(self.app, dest_cell)
+        attack_stone = CELL(attack_block_loc, 0, 0)
+        find_attack_cell = find_cell(self.app, attack_stone)
+        verify_cell_details(self.app, '', color, home_stone)
+        select_cell(self.app, color, home_stone)
+        select_results = select_cell(self.app, 'empty', dest_cell)
+        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        verified = verify_cell_details(self.app, '', 'empty', dest_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
+        assert_that(statusbar_text(self.app), equal_to([f'{color}',
+                                                        cell_status(dest_cell),
+                                                        f'empty',
+                                                        f'Please cell closer to stone to move'
                                                         ]))
 
     def test_select_attack_cell_valid(self):
