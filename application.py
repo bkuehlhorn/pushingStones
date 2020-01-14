@@ -11,6 +11,7 @@ from collections import namedtuple
 import datetime
 import gettext
 from functools import partial
+from math import copysign
 from PIL import Image, ImageTk
 import sys
 import time
@@ -58,6 +59,7 @@ class MoveStones(object):
 
     def add_direction(self, direction):
         self.direction = direction
+        self.distance = max(abs(direction.column_delta), abs(direction.row_delta))
         return None
 
     def add_to_cell(self, to_cell):
@@ -268,7 +270,6 @@ class Board(tkinter.Canvas):
         super().__init__(parent) # create a frame (self)
         self.application = self.master
 
-
         self.capture_count = {'black': 0, 'white': 0}
         self.capture_black = set
         self.capture_white = set
@@ -286,6 +287,7 @@ class Board(tkinter.Canvas):
                 block.grid(column=column*6, row=row*10+2, columnspan=6)
                 self.blocks[column][row] = block
 
+        self.init_board()
         # test different initial placement and captured stones
         # initial_white_stones_test = {
         #     '0,0': [CELL(1, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
@@ -436,14 +438,9 @@ class Board(tkinter.Canvas):
             capture_cells.append(capture)
         return capture_cells
 
-    def set_board(self, white_stones, black_stones):
+    def init_board(self):
         """
-        clear stones off board
-        Put stones on board and captured
-        stone list is four[0-3] cells in each block [0-1][0-1]
-        
-        :param white_stones: list of stones, None in list are captured
-        :param black_stones: list of stones, None in list are captured
+
         :return:
         """
         for block_column in range(2):
@@ -455,6 +452,16 @@ class Board(tkinter.Canvas):
         self.captured_stones = {'black': self.set_capture_stones(self.images['empty'], column=0, row=1),
                                 'white': self.set_capture_stones(self.images['empty'], column=6, row=1)}
 
+    def set_board(self, white_stones, black_stones):
+        """
+        clear stones off board
+        Put stones on board and captured
+        stone list is four[0-3] cells in each block [0-1][0-1]
+        
+        :param white_stones: list of stones, None in list are captured
+        :param black_stones: list of stones, None in list are captured
+        :return:
+        """
         for block, stones in white_stones.items():
             (block_column, block_row) = block.split(',')
             block_column = int(block_column)
@@ -477,7 +484,7 @@ class Board(tkinter.Canvas):
             if stone is None:
                 self.capture(color, BLOCK(block_column, block_row))
             else:
-                self.blocks[block_column][block_row].cells[stone.column][stone.row].set_cell(color)
+                self.blocks[block_column][block_row].cells[stone.row][stone.column].set_cell(color)
 
 
 class Block(ttk.Frame):
@@ -491,16 +498,18 @@ class Block(ttk.Frame):
         ttk.Frame.__init__(self, parent, style='block.TFrame', borderwidth=20, name=name)
         self.application = self.master.master
         self.board = self.master
+        self.column = block_column
+        self.row = block_row
 
         self.cell_image = images
 
         button_size = 20
         # create
         self.cells = []
-        for cell_row in range(4):
+        for cell_column in range(4):
             row_cells = []
-            for cell_column in range(4):
-                cell = Cell(self, color='empty', name=f'{name}:{cell_row}:{cell_column}')
+            for cell_row in range(4):
+                cell = Cell(self, color='empty', column=cell_column, row=cell_row, name=f'{name}:{cell_column}:{cell_row}')
                 cell.grid(column=cell_column, row=cell_row)
                 row_cells.append(cell)
             self.cells.append(row_cells)
@@ -538,7 +547,7 @@ class Cell(ttk.Frame):
     Button where stones are placed and moved.
 
     """
-    def __init__(self, parent, color, *args, **kwargs):
+    def __init__(self, parent, color, column, row, *args, **kwargs):
         """
         Block, images and location for cell
         :param parent: block
@@ -550,6 +559,8 @@ class Cell(ttk.Frame):
         self.application = self.master.master.master
         self.board = self.master.master
         self.block = self.master
+        self.column = column
+        self.row = row
 
         image = self.master.cell_image[color]
         self.button = CellButton(parent, *args, image=image, text=color, command=partial (self.select_stone), **kwargs)
@@ -588,10 +599,12 @@ class Cell(ttk.Frame):
         name = self.winfo_name().split(':')
         # look for a better way
         (_, block_column, block_row, cell_column, cell_row) = name
-        block = BLOCK(int(block_column), int(block_row))
-        cell = CELL(block, int(cell_column), int(cell_row))
+        # block = BLOCK(int(block_column), int(block_row))
+        # cell = CELL(block, int(cell_column), int(cell_row))
+        block = self.block
+        cell = self
 
-        if not VALID_BLOCK(block) or not VALID_CELL(cell):
+        if not VALID_BLOCK(block) or not VALID_CELL(self):
             LOG_STATUSBAR(self.application, 3, f'invalid cell {name}')
             return
 
@@ -621,19 +634,10 @@ class Cell(ttk.Frame):
             if block != self.board.move.home_cell.block:
                 LOG_STATUSBAR(self.application, 3, f'Please cell on same block')
                 return
-            direction = DIRECTION(self.board.move.home_cell.column - cell.column,
-                                  self.board.move.home_cell.row - cell.row,
+            direction = DIRECTION(cell.column - self.board.move.home_cell.column,
+                                  cell.row - self.board.move.home_cell.row
                                   )
-            '''
-            following check is more complex
-            (abs(direction.column_delta) == abs(direction.row_delta) and abs(direction.column_delta) > 2)) or
-            (abs(direction.column_delta) == 0 and abs(direction.row_delta) > 2)) or
-            (abs(direction.row_delta) == 0 and abs(direction.column_delta) > 2)) or
-            (abs(direction.column_delta) != abs(direction.row_delta) and (abs(direction.column_delta) != 0 or
-                                                      abs(direction.row_delta) != 0))
-            
-            '''
-            # if abs(direction.column_delta) > 2 or abs(direction.row_delta > 2): # more complex
+
             if (abs(direction.column_delta) == abs(direction.row_delta) and abs(direction.column_delta) > 2) or (
                     abs(direction.column_delta) == 0 and abs(direction.row_delta) > 2) or (
                     abs(direction.row_delta) == 0 and abs(direction.column_delta) > 2) or (
@@ -641,12 +645,24 @@ class Cell(ttk.Frame):
                         abs(direction.column_delta) != 0 and abs(direction.row_delta) != 0))):
                 LOG_STATUSBAR(self.application, 3, f'Please cell closer to stone to move')
                 return
+            self.board.move.add_direction(direction=direction)
+
+            # ensure destination cells are empty. No pushing on home board
+            column = self.board.move.home_cell.column
+            row = self.board.move.home_cell.row
+            column_delta = int(copysign(1, self.board.move.direction.column_delta))
+            row_delta = int(copysign(1, self.board.move.direction.row_delta))
+            for place in range(self.board.move.distance):
+                column += column_delta
+                row += row_delta
+                if not self.block.in_cell(column, row, 'empty'):
+                    LOG_STATUSBAR(self.application, 3, f'Destination cells must be empty')
+                    return
 
             self['style'] = 'selected.TLabel'
             self.board.set_blocks_style()
             self.board.set_attack_active(self.board.move.home_cell.block, style='active.block.TFrame')
-            self.board.move.add_direction(direction=direction)
-            LOG_STATUSBAR(self.application, 3, f'Please your stone to move on attack blocks')
+            LOG_STATUSBAR(self.application, 3, f'Please select stone to move on attack blocks')
         elif self.board.move.attack_cell == None:
             '''
             verify attack move:
@@ -662,6 +678,9 @@ class Cell(ttk.Frame):
             self.board.set_blocks_style()
             LOG_STATUSBAR(self.application, 2, f'tbd')
             LOG_STATUSBAR(self.application, 3, f'Hit make move when done')
+        pass
+
+    def check_move_cells(self, stone, direction, distance):
 
         pass
 

@@ -91,7 +91,7 @@ def verify_cells(app, color, stones_list, captured=None):
         for stone in stones:
             if stone is None:
                 continue  # consider checking captured stones todo: finish developing captured stones
-            actual_cell = app.board_frame.blocks[block_column][block_row].cells[stone.column][stone.row].cget('text')
+            actual_cell = app.board_frame.blocks[block_column][block_row].cells[stone.row][stone.column].cget('text')
             if actual_cell != color:
                 errors.append(
                     f'expected stone not at block({block_column}, {block_row}, cell({stone}. expected {color}, actual {actual_cell}')
