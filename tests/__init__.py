@@ -102,3 +102,24 @@ def verify_cells(app, color, stones_list, captured=None):
 def cell_status(cell):
     # f'block {block_loc.column} {block_loc.row} {dest_cell.column} {dest_cell.row}',
     return f'block {cell.block.column} {cell.block.row} {cell.column} {cell.row}'
+
+def find_stones_on_blocks(app, color, block=None):
+    if block is None:
+        stones_on_board = []
+        for column in range(2):
+            stones_on_block = []
+            for row in range(2):
+                stones_on_block.append(find_stones(app, color, BLOCK(column, row)))
+            stones_on_board.append(stones_on_block)
+        return stones_on_board
+    else:
+        return find_stones(app, color, block)
+
+def find_stones(app, color, block):
+    stones_in_block = []
+    for column in range(4):
+        for row in range(4):
+            cell = app.board_frame.blocks[block.column][block.row].cells[column][row]
+            if cell.cget('text') == color:
+                stones_in_block.append(cell)
+    return stones_in_block
