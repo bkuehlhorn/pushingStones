@@ -97,16 +97,15 @@ class MoveStones(object):
     def clear_cells(self, cell):
         # if cell in (self.home_cell, self.destination_cell, self.attack_cell)
         if cell == self.attack_cell:
-            self.application.board_frame.set_cell_style(self.attack_cell, '')
+            self.attack_cell.set_cell(style='')
             self.attack_cell = None
             LOG_STATUSBAR(self.application, 3, 'Select attack cell')
             return True
         elif cell == self.destination_cell:
             if self.attack_cell is not None:
-                self.application.board_frame.set_cell_style(self.attack_cell, '')
+                self.attack_cell.set_cell(style='')
                 self.attack_cell = None
-            self.application.board_frame.set_cell_style(self.destination_cell, '')
-            self.application.board_frame.set_cell_style(cell, '')
+            self.destination_cell.set_cell(style='')
             self.destination_cell = None
             self.direction = None
             self.distance = None
@@ -114,14 +113,14 @@ class MoveStones(object):
             return True
         elif cell == self.home_cell:
             if self.attack_cell is not None:
-                self.application.board_frame.set_cell_style(self.attack_cell, '')
+                self.attack_cell.set_cell(style='')
                 self.attack_cell = None
             if self.destination_cell is not None:
-                self.application.board_frame.set_cell_style(self.destination_cell, '')
+                self.destination_cell.set_cell(style='')
                 self.destination_cell = None
                 self.direction = None
                 self.distance = None
-            self.application.board_frame.set_cell_style(self.home_cell, '')
+            self.home_cell.set_cell(style='')
             self.home_cell = None
             LOG_STATUSBAR(self.application, 3, 'Select home stone')
             return True
@@ -307,7 +306,7 @@ class Board(tkinter.Canvas):
 
             else if home origin cell is not empty and attack origin cell is same color:
                 highlight cell,
-                save column and row for destination home block,
+                save column and row for destination home block
                 action is attack destination cell
                 calculate attack destination cell and highlight
                 if is attack destination cell off board or attack pushes 2 stones or (maybe) pushes own stone:
@@ -428,39 +427,6 @@ class Board(tkinter.Canvas):
         for block_row in range(2):
             self.blocks[self.attack_boards[block.column]][block_row]['style'] = style
 
-    def set_cell_style(self, cell, style):
-        """
-
-        :param cell:
-        :param style:
-        :return:
-        """
-        self.blocks[cell.block.column][cell.block.row].cells[cell.column][cell.row]['style'] = style
-
-    def set_cell(self, cell, color):
-        """
-
-        :param block_column:
-        :param block_row:
-        :param cell_column:
-        :param cell_row:
-        :param color:
-        :return:
-        """
-        self.blocks[cell.block.column][cell.block.row].cells[cell.column][cell.row].set_cell(color)
-
-    def set_cell(self, block_column, block_row, cell_column, cell_row, color):
-        """
-
-        :param block_column:
-        :param block_row:
-        :param cell_column:
-        :param cell_row:
-        :param color:
-        :return:
-        """
-        self.blocks[block_column][block_row].cells[cell_column][cell_row].set_cell(color)
-
     def clear_moves(self):
         """
         Reset board for new move: clear cell styles and set home blocks to active
@@ -479,6 +445,7 @@ class Board(tkinter.Canvas):
             save push for history
             player is other color
             highlight home blocks for player
+
         add to self.move_history: move, push
 
         :return:
@@ -499,6 +466,7 @@ class Board(tkinter.Canvas):
         self.capture_count[color] += 1
         #todo check game over: captured 2 stones from one board. check new board string in captured set
         #todo save board for captured stones: add board string to set
+        # save move in history. Need to add history to __init__
         return False # default to continue playing
 
 
@@ -531,7 +499,8 @@ class Board(tkinter.Canvas):
             for block_row in range(2):
                 for cell_column in range(4):
                     for cell_row in range(4):
-                        self.blocks[block_column][block_row].cells[cell_column][cell_row].set_cell('empty')
+                        cell = self.blocks[block_column][block_row].cells[cell_column][cell_row]
+                        cell.set_cell(color='empty')
 
         self.captured_stones = {'black': self.set_capture_stones(self.images['empty'], column=0, row=1),
                                 'white': self.set_capture_stones(self.images['empty'], column=6, row=1)}
@@ -568,7 +537,8 @@ class Board(tkinter.Canvas):
             if stone is None:
                 self.capture(color, BLOCK(block_column, block_row))
             else:
-                self.blocks[block_column][block_row].cells[stone.row][stone.column].set_cell(color)
+                cell = self.blocks[block_column][block_row].cells[stone.row][stone.column]
+                cell.set_cell(color=color)
 
 
 class Block(ttk.Frame):
@@ -599,24 +569,26 @@ class Block(ttk.Frame):
             self.cells.append(row_cells)
         pass
 
-    def set_cell(self, column, row, stone):
-        """
-        set image and text for cell
-        :param column: column of cell
-        :param row: row of cell
-        :param stone: black, white, or empty
-        :return:
-        """
-        image = self.cell_image[stone]
-        self.cells[column][row].configure(image=image, text=stone)
-
-    def in_cell(self, column, row, color):
+    def move_stone(self, from_cell, to_cell):
         """
 
-        :param color:
+        :param from_cell: cell for stone to move
+        :param to_cell: cell to move stone
+        :return: False if to_cell is not empty, True if move works
+        """
+        if to_cell.get_cell_color() != 'empty':
+            return False
+        to_cell.set_cell(color=from_cell.get_cell_color())
+        from_cell.set_cell(color='empty')
+        return True
+
+    def in_cell(self, column, row, colors):
+        """
+
+        :param colors: single color or list of colors
         :return: true if is, false if not
         """
-        return self.cells[column][row].cget('text') == color
+        return self.cells[column][row].cget('text') == colors
 
     def all_styles(self):
         # return list(map(lambda x: list(map(lambda y: f'{self}:{y}', x)), list(self.cells)))
@@ -650,14 +622,6 @@ class Cell(ttk.Frame):
         image = self.master.cell_image[color]
         self.button = CellButton(parent, *args, image=image, text=color, command=partial (self.select_stone), **kwargs)
 
-    def set_cell(self, stone):
-        """
-        :param stone: black, white, or empty
-        :return:
-        """
-        image = self.master.cell_image[stone]
-        self.button.configure(image=image, text=stone)
-
     def select_stone(self):
         """
         First click: home cell is None
@@ -680,15 +644,10 @@ class Cell(ttk.Frame):
         :return:
         """
         s = ttk.Style()
-        # if self.board.setup_cells:
-        #     self.set_cell(self.change_cell[self.button.cget('text')])
-        #     return
         color = self.board.player
         name = self.winfo_name().split(':')
         # look for a better way
         (_, block_column, block_row, cell_column, cell_row) = name
-        # block = BLOCK(int(block_column), int(block_row))
-        # cell = CELL(block, int(cell_column), int(cell_row))
         block = self.block
         cell = self
 
@@ -738,17 +697,9 @@ class Cell(ttk.Frame):
                 return
             self.board.move.add_direction(direction=direction, destination_cell=self)
 
-            # ensure destination cells are empty. No pushing on home board
-            column = self.board.move.home_cell.column
-            row = self.board.move.home_cell.row
-            column_delta = int(copysign(1, self.board.move.direction.column_delta))
-            row_delta = int(copysign(1, self.board.move.direction.row_delta))
-            for place in range(self.board.move.distance):
-                column += column_delta
-                row += row_delta
-                if not self.block.in_cell(column, row, 'empty'):
-                    LOG_STATUSBAR(self.application, 3, f'Destination cells must be empty')
-                    return
+            if self.destination_cells_invalid(self.board.move, self.board.move.home_cell, 1):
+                LOG_STATUSBAR(self.application, 3, f'Destination cells must be empty')
+                return
 
             self['style'] = 'selected.TLabel'
             self.board.set_blocks_style()
@@ -767,7 +718,14 @@ class Cell(ttk.Frame):
             if self.button.cget('text') == color:
                 self['style'] = 'selected.TLabel'
                 self.board.move.set_attack_cell(self)
-                # set style of attacked cells
+                #todo target can not be over edge of block
+
+                if self.destination_cells_invalid(self.board.move, self.board.move.attack_cell, 2):
+                    #todo check for color of pushed cell
+                    LOG_STATUSBAR(self.application, 3, f'Attack Destination cell invalid')
+                    return
+                # verify 0 or 1 other stone pushed
+                # set style of attacked cells destinations
                 self.board.set_blocks_style()
                 LOG_STATUSBAR(self.application, 2, f'tbd')
                 LOG_STATUSBAR(self.application, 3, f'Hit make move when done')
@@ -775,9 +733,56 @@ class Cell(ttk.Frame):
                 LOG_STATUSBAR(self.application, 3, f'Please select stone to move on attack blocks')
         pass
 
+    def destination_cells_invalid(self, move, cell, count=0):
+        """
+        ensure destination cells are empty. No pushing on home board
+
+        :param move: Move to be checked
+        :param cell: Cell to be moved
+        :param count: Number of cells pushed
+        :return:
+        """
+        column = cell.column # copy to prevent changing cell
+        row = cell.row # copy to prevent changing cell
+        column_delta = int(copysign(1, move.direction.column_delta))
+        row_delta = int(copysign(1, move.direction.row_delta))
+        pushed_stones = 0
+        for place in range(move.distance + 1):
+            column += column_delta
+            row += row_delta
+            if not ((-1 < column < 4) and (-1 < row < 4)):
+                if place == move.distance:
+                    continue
+                return 'off board'
+            if not self.block.in_cell(column, row, 'empty'):
+                if self.block.in_cell(column, row, cell.get_cell_color()):
+                    return True
+                pushed_stones += 1
+                if pushed_stones > count:
+                    return True
+        return False
+
     def check_move_cells(self, stone, direction, distance):
 
         pass
+
+    def set_cell(self, color=None, style=None):
+        """
+        :param color: black, white, or empty
+        :param style: Style for cell
+        :return:
+        """
+        if color is not None:
+            image = self.master.cell_image[color]
+            self.button.configure(image=image, text=color)
+        if style is not None:
+            self['style'] = style
+
+    def get_cell_color(self):
+        return self.button.cget('text')
+
+    def get_cell_style(self):
+        return self['style']
 
 
 class CellButton(ttk.Button):
@@ -817,7 +822,7 @@ class MenuBar(tkinter.Menu):
         tkinter.Menu.__init__(self, parent)
 
         filemenu = tkinter.Menu(self, tearoff=False)
-        filemenu.add_command(label=_('New'), command=self.new_dialog)
+        filemenu.add_command(label=_('New game'), command=self.new_dialog)
         filemenu.add_command(label=_('Open'), command=self.open_dialog)
         filemenu.add_command(label=_('Save'), command=self.save_dialog)
         filemenu.add_separator()
@@ -909,7 +914,7 @@ class MenuBar(tkinter.Menu):
 
         _name = tkinter.filedialog.askopenfilename()
         if isinstance(_name, str):
-            print(_('File selected for open: ') + _name)
+            print(_('File selected for open saved game: ') + _name)
         else:
             print(_('No file selected'))
 
@@ -920,7 +925,7 @@ class MenuBar(tkinter.Menu):
         :return:
         """
 
-        PopupDialog(self, _('Save button pressed'), _('Not yet implemented'))
+        PopupDialog(self, _('Save button pressed- save board and game'), _('Not yet implemented'))
 
     def setup_dialog(self):
         """
@@ -931,6 +936,7 @@ class MenuBar(tkinter.Menu):
 
         PopupDialog(self, _('Save button pressed'), _('setup button; needs text for setup'))
         self.master.board_frame.setup_cells = not self.master.board_frame.setup_cells
+
     def undo_dialog(self):
         """
         Non-functional dialog indicating successful navigation.

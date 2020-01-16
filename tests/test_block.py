@@ -1,9 +1,6 @@
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # -*- coding: utf-8 -*-
 """
-Test: pushingStones block
--------------------------------
-
 Basic testing for Pushing Stones block
 """
 
@@ -132,12 +129,8 @@ class TestSelectingHomeStones(unittest.TestCase):
 
     def test_select_own_home_stone(self):
         """
-        Select home stone of own color
-
         Verify:
             Cell for home stone is highlighted
-
-        :return:
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -173,8 +166,6 @@ class TestSelectingHomeStones(unittest.TestCase):
 
         Verify:
             Cell for home stone is normal
-
-        :return:
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -205,13 +196,8 @@ class TestSelectingHomeStones(unittest.TestCase):
 
     def test_select_empty_home_stone(self):
         """
-        Select home stone not own color. It's empty or black.
-        Cell not selected
-
         Verify:
-            Cell for home stone is highlighted
-
-        :return:
+            Status report invalid selection
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -243,12 +229,8 @@ class TestSelectingHomeStones(unittest.TestCase):
 
     def test_select_other_home_stone(self):
         """
-        Select home stone of own color
-
         Verify:
-            Cell for home stone is highlighted
-
-        :return:
+            Status report invalid selection
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -313,14 +295,13 @@ class TestSelectingDestinationCell(unittest.TestCase):
         verify_cell_details(self.app, '', self.color, self.home_stone)
         select_cell(self.app, self.color, self.home_stone)
 
-    def test_select_home_destination_cell_valid_1(self):
+    def test_valid_move_one_cell(self):
         """
-        Select home cell as destination cell on home board
-
         Verify:
-            Cell for home stone is highlighted
-
-        :return:
+            Cell for destination cell is highlighted
+            Clear highlights for home blocks
+            Highlight attack blocks
+            Status: select attack stone
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -339,19 +320,19 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
 
-    def test_select_home_destination_cell_valid_2(self):
+    def test_valid_move_two_cells(self):
         """
-
-
+        Destination is 2 cells away
         Verify:
-            Cell for home stone is highlighted
-
-        :return:
+            Cell for destination cell is highlighted
+            Clear highlights for home blocks
+            Highlight attack blocks
+            Status: select attack stone
         """
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  dest_cell=(2, 2),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
@@ -366,14 +347,10 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
 
-    def test_select_home_destination_cell_valid_3(self):
+    def test_valid_move_push_other_stone(self):
         """
-
-
         Verify:
             Cell for home stone is highlighted
-
-        :return:
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -393,14 +370,45 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
 
-    def test_select_home_destination_cell_cleared(self):
+    def test_pushing_other_stone_one_cell(self):
         """
-        Select home cell as destination cell on home board second time to clear
+            Move other stone next to home stone to move
+            Select home stone
+            Select destination cell to move other stone
+
+        Verify:
+        """
+        home_block = BLOCK(0, 0)
+        from_cell = find_cell(self.app, CELL(home_block, 0, 3))
+        to_cell = find_cell(self.app, CELL(home_block, 1, 1))
+
+        self.app.board_frame.blocks[0][0].move_stone(from_cell, to_cell)
+
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  dest_cell=(1, 1),
+                  attack_block=(1, 0),
+                  attack_cell=(0, 0))
+
+        select_cell(self.app, 'empty', self.dest_cell)
+
+        select_results = select_cell(self.app, 'black', self.dest_cell)
+        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        verified = verify_cell_details(self.app, '', 'black', self.dest_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
+                                                        cell_status(self.dest_cell),
+                                                        f'black',
+                                                        f'Please select an empty cell'
+                                                        ]))
+
+    def test_destination_cell_cleared(self):
+        """
+        Select destination cell on home board second time to clear
 
         Verify:
             Cell for home stone is normal
-
-        :return:
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -421,14 +429,13 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'Select destination cell'
                                                         ]))
 
-    def test_select_home_cell_cleared(self):
+    def test_home_stone_cleared(self):
         """
-        Select home cell as destination cell on home board second time to clear
+        Select home cell on home board second time to clear
 
         Verify:
+            Destination cell is normal
             Cell for home stone is normal
-
-        :return:
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -450,14 +457,12 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'Select home stone'
                                                         ]))
 
-    def test_select_home_destination_cell_invalid(self):
+    def test_invalid(self):
         """
-
+        Select destination more that 2 cell away
 
         Verify:
-            Cell for home stone is highlighted
-
-        :return:
+            Status reports select destination cell
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -479,12 +484,8 @@ class TestSelectingDestinationCell(unittest.TestCase):
 
     def test_select_home_destination_cell_invalid(self):
         """
-
-
         Verify:
             Cell for home stone is highlighted
-
-        :return:
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -503,6 +504,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'empty',
                                                         f'Please cell closer to stone to move'
                                                         ]))
+
 
 class TestSelectingAttackStone(unittest.TestCase):
     """
@@ -511,14 +513,16 @@ class TestSelectingAttackStone(unittest.TestCase):
     Additional Tests:
         * Select empty cell for attack stone
         * Select other stone for attack stone
-        * Select attack stone that pushes one other stone
-        * Select attack stone that pushes two other stone
-        * Select attack stone that pushes one same stone
-        * Select attack stone that moves off board one cell
-        * Select attack stone that moves off board two cells
-        * Select attack stone that pushes one other stone off block by one cell
-        * Select attack stone that pushes one other stone off block by two cells
+        * Pushes one other stone
+        * Pushes two other stone
+        * Pushes one same stone
+        * Moves off board one cell
+        * Moves off board two cells
+        * Pushes one other stone off block by one cell
+        * Pushes one other stone off block by two cells
         * Reset move after selecting attack cell
+        * Reset move after selecting destination cell
+        * Reset move after selecting home cell
 
 
     Common Parameters (change parameters to namedtuple)
@@ -577,14 +581,10 @@ class TestSelectingAttackStone(unittest.TestCase):
         select_cell(self.app, self.color, self.home_stone)
         select_cell(self.app, 'empty', self.dest_cell)
 
-    def test_select_attack_cell_valid(self):
+    def test_valid(self):
         """
-
-
         Verify:
-            Cell for self.home stone is highlighted
-
-        :return:
+            Cell for self.attack stone is highlighted
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -605,14 +605,89 @@ class TestSelectingAttackStone(unittest.TestCase):
                                                         f'Hit make move when done'
                                                         ]))
 
-    def test_clear_attack_cell(self):
+    def test_to_edge(self):
         """
-
+        Select attack stone near edge. Distance from edge.
 
         Verify:
-            Cell for self.home stone is highlighted
+            Cell for self.attack stone is highlighted
+        """
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  dest_cell=(2, 2),
+                  attack_block=(1, 0),
+                  attack_cell=(1, 0))
 
-        :return:
+        select_results = select_cell(self.app, self.color, self.attack_stone)
+        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'white', self.attack_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        # destination cell on attack board highlighted
+
+        assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
+                                                        cell_status(self.attack_stone),
+                                                        f'tbd',
+                                                        f'Hit make move when done'
+                                                        ]))
+
+    def test_double_move_off_edge(self):
+        """
+        Select attack stone near edge. Double move will be off block.
+
+        Verify:
+            Status reports invalid attack stone selected
+        """
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  dest_cell=(2, 2),
+                  attack_block=(1, 0),
+                  attack_cell=(2, 0))
+
+        select_results = select_cell(self.app, self.color, self.attack_stone)
+        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'white', self.attack_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        # destination cell on attack board highlighted
+
+        assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
+                                                        cell_status(self.attack_stone),
+                                                        f'white',
+                                                        f'Attack Destination cell invalid'
+                                                        ]))
+
+    def test_move_off(self):
+        """
+        Select attack cell at edge. Move will be off block
+        Verify:
+            Status reports invalid attack stone selected
+        """
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  dest_cell=(1, 1),
+                  attack_block=(1, 0),
+                  attack_cell=(3, 0))
+
+        select_results = select_cell(self.app, self.color, self.attack_stone)
+        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'white', self.attack_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        # destination cell on attack board highlighted
+
+        assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
+                                                        cell_status(self.attack_stone),
+                                                        f'white',
+                                                        f'Attack Destination cell invalid'
+                                                        ]))
+
+    def test_clear_attack_cell(self):
+        """
+        Click attack cell twice
+        Verify:
+            Status reports select attack stone
+            Clear attack cells
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -637,12 +712,11 @@ class TestSelectingAttackStone(unittest.TestCase):
 
     def test_clear_destination_cell(self):
         """
-
+        Click destination cell after selecting attack stone
 
         Verify:
-            Cell for self.home stone is highlighted
-
-        :return:
+            Status reports select destination cell
+            Clear attack and destination  cells
         """
         self.init(color='white',
                   home_block=(0, 0),
@@ -669,12 +743,11 @@ class TestSelectingAttackStone(unittest.TestCase):
 
     def test_clear_home_cell(self):
         """
-
+        Click home ston after selecting attack stone
 
         Verify:
-            Cell for self.home stone is highlighted
-
-        :return:
+            Status reports select home cell
+            Clear attack, destination and home cells
         """
         self.init(color='white',
                   home_block=(0, 0),
