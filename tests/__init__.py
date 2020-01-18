@@ -43,7 +43,7 @@ def verify_cell_details(app, style, color, cell):
 
     :param app: pushing stones app
     :param style: cell style used for highlighted or normal
-    :param color: black, white, empty
+    :param color: black, white, empty, skip if None
     :param cell: column, row
     :return: true (verified), false(problem) - may return empty for true and description for error
     """
@@ -54,7 +54,7 @@ def verify_cell_details(app, style, color, cell):
     # verify state: raised or normal
     if found_cell['style'] != style:
         return f'Cell invalid style: expected {style}, actual: {found_cell["style"]}'
-    if found_cell.cget('text') != color:
+    if color is not None and found_cell.cget('text') != color:
         return f'Cell not expected color: expected: {color}, actual: {found_cell.cget("text")}'
 
     return error

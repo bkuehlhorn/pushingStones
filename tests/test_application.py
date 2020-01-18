@@ -129,5 +129,6 @@ class TestFileMenu(unittest.TestCase):
         """
         proper startup of application
         """
+        # self.app.
         assert_that(self.app.main_frame.display.cget('text'), starts_with('Cookiecutter: Open-Source Project Templates'))
         assert_that(self.app.main_frame.display.cget('text'), contains_string('pushing stones'))

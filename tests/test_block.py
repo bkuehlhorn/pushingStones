@@ -10,7 +10,7 @@ import pytest
 import unittest
 
 # import pushingStones
-# from application import Application, VALID_BLOCK, VALID_CELL, BLOCK, CELL
+from application import Application, VALID_BLOCK, VALID_CELL, BLOCK, CELL, DIRECTION
 from tests import *
 
 
@@ -347,29 +347,6 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
 
-    def test_valid_move_push_other_stone(self):
-        """
-        Verify:
-            Cell for home stone is highlighted
-        """
-        self.init(color='white',
-                  home_block=(0, 0),
-                  home_stone=(0, 0),
-                  dest_cell=(0, 1),
-                  attack_block=(1, 0),
-                  attack_cell=(0, 0))
-
-        select_results = select_cell(self.app, 'empty', self.dest_cell)
-        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.dest_cell)
-        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
-
-        assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
-                                                        f'empty',
-                                                        f'Please select stone to move on attack blocks'
-                                                        ]))
-
     def test_pushing_other_stone_one_cell(self):
         """
             Move other stone next to home stone to move
@@ -381,13 +358,76 @@ class TestSelectingDestinationCell(unittest.TestCase):
         home_block = BLOCK(0, 0)
         from_cell = find_cell(self.app, CELL(home_block, 0, 3))
         to_cell = find_cell(self.app, CELL(home_block, 1, 1))
-
         self.app.board_frame.blocks[0][0].move_stone(from_cell, to_cell)
 
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
                   dest_cell=(1, 1),
+                  attack_block=(1, 0),
+                  attack_cell=(0, 0))
+
+        select_cell(self.app, 'empty', self.dest_cell)
+
+        select_results = select_cell(self.app, 'black', self.dest_cell)
+        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        verified = verify_cell_details(self.app, '', 'black', self.dest_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
+                                                        cell_status(self.dest_cell),
+                                                        f'black',
+                                                        f'Please select an empty cell'
+                                                        ]))
+
+    def test_pushing_other_stone_two_cell(self):
+        """
+            Move other stone next to home stone to move
+            Select home stone
+            Select destination cell to move other stone
+
+        Verify:
+        """
+        home_block = BLOCK(0, 0)
+        from_cell = find_cell(self.app, CELL(home_block, 0, 3))
+        to_cell = find_cell(self.app, CELL(home_block, 1, 1))
+        self.app.board_frame.blocks[0][0].move_stone(from_cell, to_cell)
+
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  dest_cell=(2, 2),
+                  attack_block=(1, 0),
+                  attack_cell=(0, 0))
+
+        select_cell(self.app, 'empty', self.dest_cell)
+
+        select_results = select_cell(self.app, 'black', self.dest_cell)
+        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        verified = verify_cell_details(self.app, '', 'black', self.dest_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
+                                                        cell_status(self.dest_cell),
+                                                        f'black',
+                                                        f'Please select an empty cell'
+                                                        ]))
+
+    def test_pushing_other_stone_two_cell(self):
+        """
+            Move other stone next to home stone to move
+            Select home stone
+            Select destination cell to move other stone
+
+        Verify:
+        """
+        home_block = BLOCK(0, 0)
+        from_cell = find_cell(self.app, CELL(home_block, 0, 3))
+        to_cell = find_cell(self.app, CELL(home_block, 2, 2))
+        self.app.board_frame.blocks[0][0].move_stone(from_cell, to_cell)
+
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  dest_cell=(2, 2),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
@@ -574,6 +614,15 @@ class TestSelectingAttackStone(unittest.TestCase):
         self.home_stone = CELL(self.home_block_loc, *home_stone)
         self.dest_cell = CELL(self.home_block_loc, *dest_cell)
         self.attack_stone = CELL(self.attack_block_loc, *attack_cell)
+        direction = DIRECTION(self.dest_cell.column - self.home_stone.column,
+                              self.dest_cell.row - self.home_stone.row
+                              )
+        attack_destination_column = self.attack_stone.column + direction.column_delta
+        attack_destination_row = self.attack_stone.row + direction.row_delta
+        self.attack_destination_cell =  CELL(self.attack_block_loc, attack_destination_column, attack_destination_row)
+        if not VALID_CELL(self.attack_destination_cell):
+            self.attack_destination_cell = None
+
         self.find_home_cell = find_cell(self.app, self.home_stone)
         self.find_dest_cell = find_cell(self.app, self.dest_cell)
         self.find_attack_cell = find_cell(self.app, self.attack_stone)
@@ -604,6 +653,10 @@ class TestSelectingAttackStone(unittest.TestCase):
                                                         f'tbd',
                                                         f'Hit make move when done'
                                                         ]))
+        if self.attack_destination_cell is not None:
+            verified = verify_cell_details(self.app, 'selected.TLabel', None, self.attack_destination_cell)
+            assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
 
     def test_to_edge(self):
         """
@@ -630,6 +683,10 @@ class TestSelectingAttackStone(unittest.TestCase):
                                                         f'tbd',
                                                         f'Hit make move when done'
                                                         ]))
+        if self.attack_destination_cell is not None:
+            verified = verify_cell_details(self.app, 'selected.TLabel', None, self.attack_destination_cell)
+            assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
 
     def test_double_move_off_edge(self):
         """
@@ -703,6 +760,9 @@ class TestSelectingAttackStone(unittest.TestCase):
         verified = verify_cell_details(self.app, '', 'white', self.attack_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         # destination cell on attack board normal
+        if self.attack_destination_cell is not None:
+            verified = verify_cell_details(self.app, '', None, self.attack_destination_cell)
+            assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
                                                         cell_status(self.attack_stone),
