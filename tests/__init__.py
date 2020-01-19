@@ -68,7 +68,7 @@ def find_cell(app, cell):
     :return: null if no cell found (bad block values, bad cell values
     """
     if VALID_BLOCK(cell.block) and VALID_CELL(cell):
-        app_block = app.board_frame.blocks[cell.block.column][cell.block.row]
+        app_block = app.board.blocks[cell.block.column][cell.block.row]
         app_cell = app_block.cells[cell.column][cell.row]
         return app_cell
     else:
@@ -91,7 +91,7 @@ def verify_cells(app, color, stones_list, captured=None):
         for stone in stones:
             if stone is None:
                 continue  # consider checking captured stones todo: finish developing captured stones
-            actual_cell = app.board_frame.blocks[block_column][block_row].cells[stone.row][stone.column].cget('text')
+            actual_cell = app.board.blocks[block_column][block_row].cells[stone.row][stone.column].cget('text')
             if actual_cell != color:
                 errors.append(
                     f'expected stone not at block({block_column}, {block_row}, cell({stone}. expected {color}, actual {actual_cell}')
@@ -119,7 +119,7 @@ def find_stones(app, color, block):
     stones_in_block = []
     for column in range(4):
         for row in range(4):
-            cell = app.board_frame.blocks[block.column][block.row].cells[column][row]
+            cell = app.board.blocks[block.column][block.row].cells[column][row]
             if cell.cget('text') == color:
                 stones_in_block.append(cell)
     return stones_in_block

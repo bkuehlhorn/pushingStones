@@ -26,7 +26,7 @@ class TestStartApp(unittest.TestCase):
     :param home_block: int: [0-1, 0-1]
     :param attack_block: int: [0-1, 0-1]
     :param stone_cell: int: [0-3, 0-3]
-    :param dest_cell: int: [0-3, 0-3]
+    :param destination_cell: int: [0-3, 0-3]
 
     """
 
@@ -50,7 +50,7 @@ class TestStartApp(unittest.TestCase):
             ['active.block.TFrame', 'block.TFrame'],
             ['active.block.TFrame', 'block.TFrame'],
         ]
-        block_styles = self.app.board_frame.get_block_style()
+        block_styles = self.app.board.get_block_style()
         assert_that(block_styles, equal_to(initial_block_styles))
 
     def test_stones_in_setup_board(self):
@@ -83,7 +83,7 @@ class TestStartApp(unittest.TestCase):
             '1,0': [CELL(BLOCK(1,0), 3, 0), CELL(BLOCK(1,0), 1, 1), CELL(BLOCK(1,0), 3, 2), CELL(BLOCK(1,0), 3, 3)],
             '1,1': [None, CELL(BLOCK(1,1), 3, 1), CELL(BLOCK(1,1), 3, 2), CELL(BLOCK(1,1), 3, 3)]
         }
-        self.app.board_frame.set_board(initial_white_stones, initial_black_stones)
+        self.app.board.set_board(initial_white_stones, initial_black_stones)
 
         errors = verify_cells(self.app, 'white', initial_white_stones)
         assert_that(errors, is_([]), f'missing white stones: {errors}')
@@ -106,7 +106,7 @@ class TestSelectingHomeStones(unittest.TestCase):
     :param home_block: int: [0-1, 0-1]
     :param attack_block: int: [0-1, 0-1]
     :param stone_cell: int: [0-3, 0-3]
-    :param dest_cell: int: [0-3, 0-3]
+    :param destination_cell: int: [0-3, 0-3]
 
     """
 
@@ -116,15 +116,15 @@ class TestSelectingHomeStones(unittest.TestCase):
     def tearDown(self):
         self.app.destroy()
 
-    def init(self, color, home_block, home_stone, dest_cell, attack_block, attack_cell):
+    def init(self, color, home_block, home_stone, destination_cell, attack_block, attack_cell):
         self.color = color
         self.home_block_loc = BLOCK(*home_block)
         self.attack_block_loc = BLOCK(*attack_block)
         self.home_stone = CELL(self.home_block_loc, *home_stone)
-        self.dest_cell = CELL(self.home_block_loc, *dest_cell)
+        self.destination_cell = CELL(self.home_block_loc, *destination_cell)
         self.attack_stone = CELL(self.attack_block_loc, *attack_cell)
         self.find_home_cell = find_cell(self.app, self.home_stone)
-        self.find_dest_cell = find_cell(self.app, self.dest_cell)
+        self.find_destination_cell = find_cell(self.app, self.destination_cell)
         self.find_attack_cell = find_cell(self.app, self.attack_stone)
 
     def test_select_own_home_stone(self):
@@ -135,7 +135,7 @@ class TestSelectingHomeStones(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
@@ -170,7 +170,7 @@ class TestSelectingHomeStones(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
@@ -203,7 +203,7 @@ class TestSelectingHomeStones(unittest.TestCase):
                   home_block=(0, 0),
                   # home_stone=(0, 1), # empty cell
                   home_stone=(0, 3), # black stone
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
         # error_color = 'empty'
@@ -236,7 +236,7 @@ class TestSelectingHomeStones(unittest.TestCase):
                   home_block=(0, 0),
                   home_stone=(0, 3),
                   # self. home_stone=(1, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
@@ -272,7 +272,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
     :param home_block: int: [0-1, 0-1]
     :param attack_block: int: [0-1, 0-1]
     :param stone_cell: int: [0-3, 0-3]
-    :param dest_cell: int: [0-3, 0-3]
+    :param destination_cell: int: [0-3, 0-3]
 
     """
 
@@ -282,15 +282,15 @@ class TestSelectingDestinationCell(unittest.TestCase):
     def tearDown(self):
         self.app.destroy()
 
-    def init(self, color, home_block, home_stone, dest_cell, attack_block, attack_cell):
+    def init(self, color, home_block, home_stone, destination_cell, attack_block, attack_cell):
         self.color = color
         self.home_block_loc = BLOCK(*home_block)
         self.attack_block_loc = BLOCK(*attack_block)
         self.home_stone = CELL(self.home_block_loc, *home_stone)
-        self.dest_cell = CELL(self.home_block_loc, *dest_cell)
+        self.destination_cell = CELL(self.home_block_loc, *destination_cell)
         self.attack_stone = CELL(self.attack_block_loc, *attack_cell)
         self.find_home_cell = find_cell(self.app, self.home_stone)
-        self.find_dest_cell = find_cell(self.app, self.dest_cell)
+        self.find_destination_cell = find_cell(self.app, self.destination_cell)
         self.find_attack_cell = find_cell(self.app, self.attack_stone)
         verify_cell_details(self.app, '', self.color, self.home_stone)
         select_cell(self.app, self.color, self.home_stone)
@@ -306,16 +306,16 @@ class TestSelectingDestinationCell(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_results = select_cell(self.app, 'empty', self.dest_cell)
+        select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.dest_cell)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'empty',
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
@@ -332,17 +332,17 @@ class TestSelectingDestinationCell(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(2, 2),
+                  destination_cell=(2, 2),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_results = select_cell(self.app, 'empty', self.dest_cell)
+        select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.dest_cell)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'empty',
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
@@ -358,23 +358,23 @@ class TestSelectingDestinationCell(unittest.TestCase):
         home_block = BLOCK(0, 0)
         from_cell = find_cell(self.app, CELL(home_block, 0, 3))
         to_cell = find_cell(self.app, CELL(home_block, 1, 1))
-        self.app.board_frame.blocks[0][0].move_stone(from_cell, to_cell)
+        self.app.board.blocks[0][0].move_stone(from_cell, to_cell)
 
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_cell(self.app, 'empty', self.dest_cell)
+        select_cell(self.app, 'empty', self.destination_cell)
 
-        select_results = select_cell(self.app, 'black', self.dest_cell)
+        select_results = select_cell(self.app, 'black', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'black', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'black', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'black',
                                                         f'Please select an empty cell'
                                                         ]))
@@ -390,23 +390,23 @@ class TestSelectingDestinationCell(unittest.TestCase):
         home_block = BLOCK(0, 0)
         from_cell = find_cell(self.app, CELL(home_block, 0, 3))
         to_cell = find_cell(self.app, CELL(home_block, 1, 1))
-        self.app.board_frame.blocks[0][0].move_stone(from_cell, to_cell)
+        self.app.board.blocks[0][0].move_stone(from_cell, to_cell)
 
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(2, 2),
+                  destination_cell=(2, 2),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_cell(self.app, 'empty', self.dest_cell)
+        select_cell(self.app, 'empty', self.destination_cell)
 
-        select_results = select_cell(self.app, 'black', self.dest_cell)
+        select_results = select_cell(self.app, 'black', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'black', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'black', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'black',
                                                         f'Please select an empty cell'
                                                         ]))
@@ -422,23 +422,23 @@ class TestSelectingDestinationCell(unittest.TestCase):
         home_block = BLOCK(0, 0)
         from_cell = find_cell(self.app, CELL(home_block, 0, 3))
         to_cell = find_cell(self.app, CELL(home_block, 2, 2))
-        self.app.board_frame.blocks[0][0].move_stone(from_cell, to_cell)
+        self.app.board.blocks[0][0].move_stone(from_cell, to_cell)
 
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(2, 2),
+                  destination_cell=(2, 2),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_cell(self.app, 'empty', self.dest_cell)
+        select_cell(self.app, 'empty', self.destination_cell)
 
-        select_results = select_cell(self.app, 'black', self.dest_cell)
+        select_results = select_cell(self.app, 'black', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'black', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'black', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'black',
                                                         f'Please select an empty cell'
                                                         ]))
@@ -453,18 +453,18 @@ class TestSelectingDestinationCell(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_cell(self.app, 'empty', self.dest_cell)
+        select_cell(self.app, 'empty', self.destination_cell)
 
-        select_results = select_cell(self.app, 'empty', self.dest_cell)
+        select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'empty', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'empty',
                                                         f'Select destination cell'
                                                         ]))
@@ -480,19 +480,19 @@ class TestSelectingDestinationCell(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_cell(self.app, 'empty', self.dest_cell)
+        select_cell(self.app, 'empty', self.destination_cell)
 
         select_results = select_cell(self.app, self.color, self.home_stone)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
         verified = verify_cell_details(self.app, '', self.color, self.home_stone)
-        verified = verify_cell_details(self.app, '', 'empty', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'empty',
                                                         f'Select home stone'
                                                         ]))
@@ -507,17 +507,17 @@ class TestSelectingDestinationCell(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(2, 1),
+                  destination_cell=(2, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_results = select_cell(self.app, 'empty', self.dest_cell)
+        select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'empty', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'empty',
                                                         f'Please cell closer to stone to move'
                                                         ]))
@@ -530,17 +530,17 @@ class TestSelectingDestinationCell(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(2, 1),
+                  destination_cell=(2, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
-        select_results = select_cell(self.app, 'empty', self.dest_cell)
+        select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'empty', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.dest_cell),
+                                                        cell_status(self.destination_cell),
                                                         f'empty',
                                                         f'Please cell closer to stone to move'
                                                         ]))
@@ -570,7 +570,7 @@ class TestSelectingAttackStone(unittest.TestCase):
     :param home_block: int: [0-1, 0-1]
     :param attack_block: int: [0-1, 0-1]
     :param stone_cell: int: [0-3, 0-3]
-    :param dest_cell: int: [0-3, 0-3]
+    :param destination_cell: int: [0-3, 0-3]
 
     """
     initial_white_stones = {
@@ -601,21 +601,21 @@ class TestSelectingAttackStone(unittest.TestCase):
 
     def setUp(self):
         self.app = Application()
-        # self.app.board_frame.init_board()
-        # self.app.board_frame.set_board(self.captured_white_stones, self.captuerd_black_stones)
+        # self.app.board.init_board()
+        # self.app.board.set_board(self.captured_white_stones, self.captuerd_black_stones)
 
     def tearDown(self):
         self.app.destroy()
 
-    def init(self, color, home_block, home_stone, dest_cell, attack_block, attack_cell):
+    def init(self, color, home_block, home_stone, destination_cell, attack_block, attack_cell):
         self.color = color
         self.home_block_loc = BLOCK(*home_block)
         self.attack_block_loc = BLOCK(*attack_block)
         self.home_stone = CELL(self.home_block_loc, *home_stone)
-        self.dest_cell = CELL(self.home_block_loc, *dest_cell)
+        self.destination_cell = CELL(self.home_block_loc, *destination_cell)
         self.attack_stone = CELL(self.attack_block_loc, *attack_cell)
-        direction = DIRECTION(self.dest_cell.column - self.home_stone.column,
-                              self.dest_cell.row - self.home_stone.row
+        direction = DIRECTION(self.destination_cell.column - self.home_stone.column,
+                              self.destination_cell.row - self.home_stone.row
                               )
         attack_destination_column = self.attack_stone.column + direction.column_delta
         attack_destination_row = self.attack_stone.row + direction.row_delta
@@ -624,11 +624,11 @@ class TestSelectingAttackStone(unittest.TestCase):
             self.attack_destination_cell = None
 
         self.find_home_cell = find_cell(self.app, self.home_stone)
-        self.find_dest_cell = find_cell(self.app, self.dest_cell)
+        self.find_destination_cell = find_cell(self.app, self.destination_cell)
         self.find_attack_cell = find_cell(self.app, self.attack_stone)
         verify_cell_details(self.app, '', self.color, self.home_stone)
         select_cell(self.app, self.color, self.home_stone)
-        select_cell(self.app, 'empty', self.dest_cell)
+        select_cell(self.app, 'empty', self.destination_cell)
 
     def test_valid(self):
         """
@@ -638,7 +638,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
@@ -668,7 +668,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(2, 2),
+                  destination_cell=(2, 2),
                   attack_block=(1, 0),
                   attack_cell=(1, 0))
 
@@ -698,7 +698,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(2, 2),
+                  destination_cell=(2, 2),
                   attack_block=(1, 0),
                   attack_cell=(2, 0))
 
@@ -723,7 +723,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(3, 0))
 
@@ -749,7 +749,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
@@ -781,17 +781,17 @@ class TestSelectingAttackStone(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
         select_cell(self.app, self.color, self.attack_stone)
 
-        select_results = select_cell(self.app, 'empty', self.dest_cell)
+        select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
         verified = verify_cell_details(self.app, '', self.color, self.attack_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
-        verified = verify_cell_details(self.app, '', 'empty', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         # destination cell on attack board normal
 
@@ -812,7 +812,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         self.init(color='white',
                   home_block=(0, 0),
                   home_stone=(0, 0),
-                  dest_cell=(1, 1),
+                  destination_cell=(1, 1),
                   attack_block=(1, 0),
                   attack_cell=(0, 0))
 
@@ -822,7 +822,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
         verified = verify_cell_details(self.app, '', self.color, self.attack_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
-        verified = verify_cell_details(self.app, '', 'empty', self.dest_cell)
+        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         verified = verify_cell_details(self.app, '', self.color, self.home_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
@@ -833,4 +833,256 @@ class TestSelectingAttackStone(unittest.TestCase):
                                                         f'tbd',
                                                         f'Select home stone'
                                                         ]))
+
+
+class TestMoveWhiteStone(unittest.TestCase):
+    """
+    Test moving white stone
+
+    Additional Tests:
+        * move white single distance
+        * move white double distance
+        * move white single distance black move
+        * move white double distance black next to white
+        * move white double distance black distance one from white
+        * move white capture black on edge single distance
+        * move white capture black on edge double distance
+        * move white capture black next to edge double distance
+
+
+    Common Parameters (change parameters to namedtuple)
+
+    :param home_block: int: [0-1, 0-1]
+    :param attack_block: int: [0-1, 0-1]
+    :param stone_cell: int: [0-3, 0-3]
+    :param destination_cell: int: [0-3, 0-3]
+
+    """
+    initial_white_stones = {
+        '0,0': [CELL(BLOCK(0, 0), 0, 0), CELL(BLOCK(0, 0), 0, 1), CELL(BLOCK(0, 0), 0, 2), CELL(BLOCK(0, 0), 0, 3)],
+        '0,1': [CELL(BLOCK(0, 1), 0, 0), CELL(BLOCK(0, 1), 0, 1), CELL(BLOCK(0, 1), 0, 2), CELL(BLOCK(0, 1), 0, 3)],
+        '1,0': [CELL(BLOCK(1, 0), 0, 0), CELL(BLOCK(1, 0), 0, 1), CELL(BLOCK(1, 0), 0, 2), CELL(BLOCK(1, 0), 0, 3)],
+        '1,1': [CELL(BLOCK(0, 1), 0, 0), CELL(BLOCK(1, 1), 0, 1), CELL(BLOCK(1, 1), 0, 2), CELL(BLOCK(1, 1), 0, 3)]
+    }
+    initial_black_stones = {
+        '0,0': [CELL(BLOCK(0, 0), 3, 0), CELL(BLOCK(0, 0), 3, 1), CELL(BLOCK(0, 0), 3, 2), CELL(BLOCK(0, 0), 3, 3)],
+        '0,1': [CELL(BLOCK(0, 1), 3, 0), CELL(BLOCK(0, 1), 3, 1), CELL(BLOCK(0, 1), 3, 2), CELL(BLOCK(0, 1), 3, 3)],
+        '1,0': [CELL(BLOCK(1, 0), 3, 0), CELL(BLOCK(1, 0), 3, 1), CELL(BLOCK(1, 0), 3, 2), CELL(BLOCK(1, 0), 3, 3)],
+        '1,1': [CELL(BLOCK(0, 1), 3, 0), CELL(BLOCK(1, 1), 3, 1), CELL(BLOCK(1, 1), 3, 2), CELL(BLOCK(1, 1), 3, 3)]
+    }
+
+    captured_white_stones = {
+        '0,0': [CELL(BLOCK(0, 0), 1, 0), CELL(BLOCK(0, 0), 0, 1), CELL(BLOCK(0, 0), 0, 2), CELL(BLOCK(0, 0), 0, 3)],
+        '0,1': [CELL(BLOCK(0, 1), 0, 0), CELL(BLOCK(0, 1), 2, 1), CELL(BLOCK(0, 1), 0, 2), CELL(BLOCK(0, 1), 0, 3)],
+        '1,0': [CELL(BLOCK(1, 0), 0, 0), CELL(BLOCK(1, 0), 0, 1), None, CELL(BLOCK(1, 0), 0, 3)],
+        '1,1': [CELL(BLOCK(1, 1), 0, 0), CELL(BLOCK(1, 1), 0, 1), CELL(BLOCK(1, 1), 0, 2), None]
+    }
+    captuerd_black_stones = {
+        '0,0': [CELL(BLOCK(0, 0), 3, 0), CELL(BLOCK(0, 0), 3, 1), CELL(BLOCK(0, 0), 3, 2), None],
+        '0,1': [CELL(BLOCK(0, 1), 3, 0), CELL(BLOCK(0, 1), 3, 1), CELL(BLOCK(0, 1), 2, 2), CELL(BLOCK(0, 1), 3, 3)],
+        '1,0': [CELL(BLOCK(1, 0), 3, 0), CELL(BLOCK(1, 0), 1, 1), CELL(BLOCK(1, 0), 3, 2), CELL(BLOCK(1, 0), 3, 3)],
+        '1,1': [None, CELL(BLOCK(1, 1), 3, 1), CELL(BLOCK(1, 1), 3, 2), CELL(BLOCK(1, 1), 3, 3)]
+    }
+
+    def setUp(self):
+        self.app = Application()
+        # self.app.board_frame.init_board()
+        # self.app.board_frame.set_board(self.captured_white_stones, self.captuerd_black_stones)
+
+    def tearDown(self):
+        self.app.destroy()
+
+    def init(self, color, home_block, home_stone, destination_cell, attack_block, attack_cell):
+        self.color = color
+        self.home_block_loc = BLOCK(*home_block)
+        self.attack_block_loc = BLOCK(*attack_block)
+        self.home_stone = CELL(self.home_block_loc, *home_stone)
+        self.destination_cell = CELL(self.home_block_loc, *destination_cell)
+        self.attack_stone = CELL(self.attack_block_loc, *attack_cell)
+        direction = DIRECTION(self.destination_cell.column - self.home_stone.column,
+                              self.destination_cell.row - self.home_stone.row
+                              )
+        attack_destination_column = self.attack_stone.column + direction.column_delta
+        attack_destination_row = self.attack_stone.row + direction.row_delta
+        self.attack_destination_cell =  CELL(self.attack_block_loc, attack_destination_column, attack_destination_row)
+        if not VALID_CELL(self.attack_destination_cell):
+            self.attack_destination_cell = None
+
+        self.find_home_cell = find_cell(self.app, self.home_stone)
+        self.find_destination_cell = find_cell(self.app, self.destination_cell)
+        self.find_attack_cell = find_cell(self.app, self.attack_stone)
+        self.find_attack_destination_cell = find_cell(self.app, self.attack_destination_cell)
+        verify_cell_details(self.app, '', self.color, self.home_stone)
+        select_cell(self.app, self.color, self.home_stone)
+        select_cell(self.app, 'empty', self.destination_cell)
+        select_cell(self.app, self.color, self.attack_stone)
+
+    def test_white_single_distance(self):
+        """
+
+        :return:
+        """
+        attack_block = BLOCK(1, 0)
+        from_cell = find_cell(self.app, CELL(attack_block, 3, 3))
+        to_cell = find_cell(self.app, CELL(attack_block, 1, 1))
+        push_cell = find_cell(self.app, CELL(attack_block, 2, 2))
+        # self.app.board.blocks[1][0].move_stone(from_cell, to_cell)
+
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  destination_cell=(1, 1),
+                  attack_block=(1, 0),
+                  attack_cell=(0, 0))
+
+        self.app.board.make_moves()
+        verified = verify_cell_details(self.app, '', 'empty', self.home_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
+        verified = verify_cell_details(self.app, '', 'empty', self.attack_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.attack_destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', 'empty', push_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        #todo check history for move
+
+        pass
+
+    def test_white_single_distance_push(self):
+        """
+
+        :return:
+        """
+        attack_block = BLOCK(1, 0)
+        from_cell = find_cell(self.app, CELL(attack_block, 3, 3))
+        to_cell = find_cell(self.app, CELL(attack_block, 1, 1))
+        push_cell = find_cell(self.app, CELL(attack_block, 2, 2))
+        self.app.board.blocks[1][0].move_stone(from_cell, to_cell)
+
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  destination_cell=(1, 1),
+                  attack_block=(1, 0),
+                  attack_cell=(0, 0))
+
+        self.app.board.make_moves()
+        verified = verify_cell_details(self.app, '', 'empty', self.home_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
+        verified = verify_cell_details(self.app, '', 'empty', self.attack_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.attack_destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.app.board.other_stone[self.color], push_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        #todo check history for move
+
+        pass
+
+    def test_white_double_distance(self):
+        """
+
+        :return:
+        """
+        attack_block = BLOCK(1, 0)
+        from_cell = find_cell(self.app, CELL(attack_block, 3, 3))
+        to_cell = find_cell(self.app, CELL(attack_block, 2, 2))
+        push_cell = find_cell(self.app, CELL(attack_block, 3, 3))
+        # self.app.board.blocks[1][0].move_stone(from_cell, to_cell)
+
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  destination_cell=(2, 2),
+                  attack_block=(1, 0),
+                  attack_cell=(0, 0))
+
+        self.app.board.make_moves()
+        verified = verify_cell_details(self.app, '', 'empty', self.home_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
+        verified = verify_cell_details(self.app, '', 'empty', self.attack_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.attack_destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.app.board.other_stone[self.color], push_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        #todo check history for move
+
+        pass
+
+    def test_white_double_distance_push(self):
+        """
+
+        :return:
+        """
+        attack_block = BLOCK(1, 0)
+        from_cell = find_cell(self.app, CELL(attack_block, 3, 3))
+        to_cell = find_cell(self.app, CELL(attack_block, 1, 1))
+        push_cell = find_cell(self.app, CELL(attack_block, 3, 3))
+        self.app.board.blocks[1][0].move_stone(from_cell, to_cell)
+
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  destination_cell=(2, 2),
+                  attack_block=(1, 0),
+                  attack_cell=(0, 0))
+
+        self.app.board.make_moves()
+        verified = verify_cell_details(self.app, '', 'empty', self.home_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
+        verified = verify_cell_details(self.app, '', 'empty', self.attack_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.attack_destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.app.board.other_stone[self.color], push_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        #todo check history for move
+
+    def test_white_double_distance_push_two(self):
+        """
+        Move black cell from 3, 3 to 2, 2
+        Move white 0, 0 to 1, 1
+        Check empty in 0, 0
+        Check white in 1, 1
+        Check
+        """
+        attack_block = BLOCK(1, 0)
+        from_cell = find_cell(self.app, CELL(attack_block, 3, 3))
+        to_cell = find_cell(self.app, CELL(attack_block, 2, 2))
+        push_cell = find_cell(self.app, CELL(attack_block, 3, 3))
+        self.app.board.blocks[1][0].move_stone(from_cell, to_cell)
+
+        self.init(color='white',
+                  home_block=(0, 0),
+                  home_stone=(0, 0),
+                  destination_cell=(2, 2),
+                  attack_block=(1, 0),
+                  attack_cell=(0, 0))
+
+        self.app.board.make_moves()
+        verified = verify_cell_details(self.app, '', 'empty', self.home_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+
+        verified = verify_cell_details(self.app, '', 'empty', self.attack_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.color, self.attack_destination_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        verified = verify_cell_details(self.app, '', self.app.board.other_stone[self.color], push_cell)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
+        # todo check history for move
 

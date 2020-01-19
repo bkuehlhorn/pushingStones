@@ -47,8 +47,9 @@ class MoveStones(object):
     def __init__(self, application, home_stone):
         self.application = application
         self.home_stone = home_stone
-        self.attack_stone = None
         self.destination_cell = None
+        self.attack_stone = None
+        self.attack_destination_cell = None
         self.direction = None
         self.distance = None
 
@@ -339,6 +340,34 @@ class Board(tkinter.Canvas):
     home_boards = {'white': 0, 'black': 1}  # rows
     attack_boards = [1, 0] # selected home board column is index to attack column
 
+    # test different initial placement and captured stones
+    # initial_white_stones_test = {
+    #     '0,0': [CELL(1, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
+    #     '0,1': [CELL(0, 0), CELL(2, 1), CELL(0, 2), CELL(0, 3)],
+    #     '1,0': [CELL(0, 0), CELL(0, 1), None,       CELL(0, 3)],
+    #     '1,1': [CELL(0, 0), CELL(0, 1), CELL(0, 2), None]
+    # }
+    # initial_black_stones_test = {
+    #     '0,0': [CELL(3, 0), CELL(3, 1), CELL(3, 2), None],
+    #     '0,1': [CELL(3, 0), CELL(3, 1), CELL(2, 2), CELL(3, 3)],
+    #     '1,0': [CELL(3, 0), CELL(1, 1), CELL(3, 2), CELL(3, 3)],
+    #     '1,1': [None,       CELL(3, 1), CELL(3, 2), CELL(3, 3)]
+    # }
+    # self.set_board(initial_white_stones_test, initial_black_stones_test)
+
+    initial_white_stones = {
+        '0,0': [CELL(BLOCK(0, 0), 0, 0), CELL(BLOCK(0, 0), 0, 1), CELL(BLOCK(0, 0), 0, 2), CELL(BLOCK(0, 0), 0, 3)],
+        '0,1': [CELL(BLOCK(0, 1), 0, 0), CELL(BLOCK(0, 1), 0, 1), CELL(BLOCK(0, 1), 0, 2), CELL(BLOCK(0, 1), 0, 3)],
+        '1,0': [CELL(BLOCK(1, 0), 0, 0), CELL(BLOCK(1, 0), 0, 1), CELL(BLOCK(1, 0), 0, 2), CELL(BLOCK(1, 0), 0, 3)],
+        '1,1': [CELL(BLOCK(0, 1), 0, 0), CELL(BLOCK(1, 1), 0, 1), CELL(BLOCK(1, 1), 0, 2), CELL(BLOCK(1, 1), 0, 3)]
+    }
+    initial_black_stones = {
+        '0,0': [CELL(BLOCK(0, 0), 3, 0), CELL(BLOCK(0, 0), 3, 1), CELL(BLOCK(0, 0), 3, 2), CELL(BLOCK(0, 0), 3, 3)],
+        '0,1': [CELL(BLOCK(0, 1), 3, 0), CELL(BLOCK(0, 1), 3, 1), CELL(BLOCK(0, 1), 3, 2), CELL(BLOCK(0, 1), 3, 3)],
+        '1,0': [CELL(BLOCK(1, 0), 3, 0), CELL(BLOCK(1, 0), 3, 1), CELL(BLOCK(1, 0), 3, 2), CELL(BLOCK(1, 0), 3, 3)],
+        '1,1': [CELL(BLOCK(0, 1), 3, 0), CELL(BLOCK(1, 1), 3, 1), CELL(BLOCK(1, 1), 3, 2), CELL(BLOCK(1, 1), 3, 3)]
+    }
+
     def __init__(self, parent, x, y):
         # ttk.Frame.__init__(self, parent)
         super().__init__(parent) # create a frame (self)
@@ -365,42 +394,15 @@ class Board(tkinter.Canvas):
                 self.blocks[column][row] = block
 
         self.init_board()
-        # test different initial placement and captured stones
-        # initial_white_stones_test = {
-        #     '0,0': [CELL(1, 0), CELL(0, 1), CELL(0, 2), CELL(0, 3)],
-        #     '0,1': [CELL(0, 0), CELL(2, 1), CELL(0, 2), CELL(0, 3)],
-        #     '1,0': [CELL(0, 0), CELL(0, 1), None,       CELL(0, 3)],
-        #     '1,1': [CELL(0, 0), CELL(0, 1), CELL(0, 2), None]
-        # }
-        # initial_black_stones_test = {
-        #     '0,0': [CELL(3, 0), CELL(3, 1), CELL(3, 2), None],
-        #     '0,1': [CELL(3, 0), CELL(3, 1), CELL(2, 2), CELL(3, 3)],
-        #     '1,0': [CELL(3, 0), CELL(1, 1), CELL(3, 2), CELL(3, 3)],
-        #     '1,1': [None,       CELL(3, 1), CELL(3, 2), CELL(3, 3)]
-        # }
-        # self.set_board(initial_white_stones_test, initial_black_stones_test)
+        self.set_board(self.initial_white_stones, self.initial_black_stones)
 
-        initial_white_stones = {
-            '0,0': [CELL(BLOCK(0,0), 0, 0), CELL(BLOCK(0,0), 0, 1), CELL(BLOCK(0,0), 0, 2), CELL(BLOCK(0,0), 0, 3)],
-            '0,1': [CELL(BLOCK(0,1), 0, 0), CELL(BLOCK(0,1), 0, 1), CELL(BLOCK(0,1), 0, 2), CELL(BLOCK(0,1), 0, 3)],
-            '1,0': [CELL(BLOCK(1,0), 0, 0), CELL(BLOCK(1,0), 0, 1), CELL(BLOCK(1,0), 0, 2), CELL(BLOCK(1,0), 0, 3)],
-            '1,1': [CELL(BLOCK(0,1), 0, 0), CELL(BLOCK(1,1), 0, 1), CELL(BLOCK(1,1), 0, 2), CELL(BLOCK(1,1), 0, 3)]
-        }
-        initial_black_stones = {
-            '0,0': [CELL(BLOCK(0,0), 3, 0), CELL(BLOCK(0,0), 3, 1), CELL(BLOCK(0,0), 3, 2), CELL(BLOCK(0,0), 3, 3)],
-            '0,1': [CELL(BLOCK(0,1), 3, 0), CELL(BLOCK(0,1), 3, 1), CELL(BLOCK(0,1), 3, 2), CELL(BLOCK(0,1), 3, 3)],
-            '1,0': [CELL(BLOCK(1,0), 3, 0), CELL(BLOCK(1,0), 3, 1), CELL(BLOCK(1,0), 3, 2), CELL(BLOCK(1,0), 3, 3)],
-            '1,1': [CELL(BLOCK(0,1), 3, 0), CELL(BLOCK(1,1), 3, 1), CELL(BLOCK(1,1), 3, 2), CELL(BLOCK(1,1), 3, 3)]
-        }
-        self.set_board(initial_white_stones, initial_black_stones)
-
-        self.move_button = ttk.Button(self, text=f'clear moves', name=f'clear moves', command=self.clear_moves)
-        self.move_button.grid(column=5, row=13)
+        self.clear_button = ttk.Button(self, text=f'clear moves', name=f'clear moves', command=self.clear_moves)
+        self.clear_button['style'] = 'BW.TButton'
+        self.clear_button.grid(column=5, row=13)
 
         self.move_button = ttk.Button(self, text=f'make move', name=f'make move', command=self.make_moves)
+        self.move_button['style'] = 'BW.TButton'
         self.move_button.grid(column=6, row=13)
-
-        self.move = None
 
         pass
 
@@ -462,29 +464,32 @@ class Board(tkinter.Canvas):
         :return:
 
         """
-        pushed_stone = self.find_pushed_stone(self.move)
-        if pushed_stone is not None:
-            pushed_to = pushed_stone
-            pushed_to.add_direction(self.move)
-            if VALID_CELL(pushed_to):
-                pushed_stone.block.move_stone(pushed_stone, pushed_to)
-            else:
-                self.capture_stone(pushed_stone)
-        self.move.get_attack_stone().block.move_stone(self.move.get_attack_stone(),
-                                                self.move.attack_destination_cell)
-        self.move.home_stone.block.move_stone(self.move.home_stone,
-                                              self.move.destination_cell)
-        self.move.clear_cells(self.move.home_stone)
-        self.set_player(self.other_stone[self.current_player])
+        if self.move.attack_destination_cell is not None:
+            pushed_stone = self.find_pushed_stone(self.move)
+            if pushed_stone is not None:
+                pushed_to = self.move.attack_destination_cell.get_next_cell(self.move)
+                if pushed_to is not None:
+                    pushed_to = self.find_cell(pushed_to)
+                    pushed_stone.block.move_stone(pushed_stone, pushed_to)
+                else:
+                    self.capture_stone(pushed_stone)
+                    pushed_stone.set_cell(color='empty')
+
+            self.move.get_attack_stone().block.move_stone(self.move.get_attack_stone(),
+                                                    self.move.attack_destination_cell)
+            self.move.home_stone.block.move_stone(self.move.home_stone,
+                                                  self.move.destination_cell)
+            self.move.clear_cells(self.move.home_stone)
+            self.set_player(self.other_stone[self.current_player])
 
         return True
 
     def find_pushed_stone(self, move):
-        pushed_cell = move.get_attack_stone()
+        next_cell = move.get_attack_stone()
         for push_distance in range(move.distance):
-            if pushed_cell.add_direction(move):
-                if pushed_cell.get_cell_color() == self.other_stone[self.current_player]:
-                    return pushed_cell
+            next_cell = next_cell.get_next_cell(move)
+            if next_cell is not None and next_cell.get_cell_color() == self.other_stone[self.current_player]:
+                return next_cell
         return None
 
     def capture(self, color):
@@ -537,10 +542,11 @@ class Board(tkinter.Canvas):
                 for cell_column in range(4):
                     for cell_row in range(4):
                         cell = self.blocks[block_column][block_row].cells[cell_column][cell_row]
-                        cell.set_cell(color='empty')
+                        cell.set_cell(style='', color='empty')
 
         self.captured_stones = {'black': self.set_capture_stones(self.images['empty'], column=0, row=1),
                                 'white': self.set_capture_stones(self.images['empty'], column=6, row=1)}
+        self.move = None
 
     def set_board(self, white_stones, black_stones):
         """
@@ -645,6 +651,11 @@ class Block(ttk.Frame):
         :return: true if is, false if not
         """
         return self.cells[column][row].cget('text') == colors
+
+    def reset_all_cells(self):
+        for column in range(4):
+            for row in range(4):
+                self.cells[column][row].set_cell(color='empty', style='')
 
     def all_styles(self):
         # return list(map(lambda x: list(map(lambda y: f'{self}:{y}', x)), list(self.cells)))
@@ -832,10 +843,25 @@ class Cell(ttk.Frame):
                     return True
         return False
 
-    def add_direction(self, move):
-        self.column += move.direction.column_delta
-        self.row += move.direction.row_delta
-        return VALID_CELL(self)
+    def get_next_cell(self, move):
+        cell = CELL(self.block,
+                    self.column + int(copysign(1, move.direction.column_delta)),
+                    self.row + int(copysign(1, move.direction.row_delta)))
+        if VALID_CELL(cell):
+            cell = self.board.find_cell(cell)
+            return cell
+        else:
+            return None
+
+    def get_push_cell(self, move):
+        cell = CELL(self.block,
+                    self.column + move.direction.column_delta,
+                    self.row + move.direction.row_delta)
+        if VALID_CELL(cell):
+            cell = self.board.find_cell(cell)
+            return cell
+        else:
+            return None
 
     def check_move_cells(self, stone, direction, distance):
 
@@ -978,7 +1004,11 @@ class MenuBar(tkinter.Menu):
         :return:
         """
 
-        PopupDialog(self, _('New button pressed'), _('Not yet implemented'))
+        # PopupDialog(self, _('New button pressed'), _('implemented'))
+        self.master.board.init_board()
+        self.master.board.set_board(self.master.board.initial_white_stones,
+                                    self.master.board.initial_black_stones)
+        #todo reset history, set origin board
 
     def open_dialog(self):
         """
@@ -1009,8 +1039,8 @@ class MenuBar(tkinter.Menu):
         :return:
         """
 
-        PopupDialog(self, _('Setup button pressed'), _(f'state for setup: {self.master.board_frame.setup_cells}'))
-        self.master.board_frame.setup_cells = not self.master.board_frame.setup_cells
+        PopupDialog(self, _('Setup button pressed'), _(f'state for setup: {self.master.board.setup_cells}'))
+        self.master.board.setup_cells = not self.master.board.setup_cells
 
     def undo_dialog(self):
         """
@@ -1053,6 +1083,7 @@ class Application(tkinter.Tk):
         style.configure("status.TLabel", font=('Helvetica', 20))
         # style.configure("status.TLabel", foreground="black", highlightcolor='red', background="white", font=('Helvetica', 20))
         style.configure("BW.TLabel", foreground="green", highlightcolor='red', background="black", height=200, bd=40, font=('Helvetica', 30))
+        style.configure("BW.TButton", foreground="green", highlightcolor='red', background="black", height=200, bd=40, font=('Helvetica', 20))
         style.configure("f.BW.TLabel", foreground="magenta",  relief='raised')
         style.configure("selected.TLabel", foreground="magenta",  relief='raised')
         style.configure("block.TFrame", foreground="magenta", bd=20, bg='red',  relief='sunken', borderwidth=20)
@@ -1062,10 +1093,10 @@ class Application(tkinter.Tk):
                        height=300, bd=30, bg='black',)
 
         self.wm_title('Pushing Stones')
-        self.wm_geometry('1000x2000')
+        self.wm_geometry('1500x2000')
 
-        menubar = MenuBar(self)
-        self.config(menu=menubar)
+        self.menubar = MenuBar(self)
+        self.config(menu=self.menubar)
 
         self.statusbar = StatusBar(self)
         self.statusbar.pack(side='bottom', fill='x')
@@ -1080,14 +1111,18 @@ class Application(tkinter.Tk):
 
         self.tool_bar = ToolBar(self)
         self.tool_bar.pack(side='top', fill='x')
+
+        # self.board = Board(self, 0, 0)
+        # self.board.pack(side='left', fill='y')
+
         self.main_frame = MainFrame(self)
         self.main_frame.pack(side='top', fill='y')
 
-        self.board_frame = Board(self, 0, 0)
-        self.board_frame.pack(side='left', fill='y')
+        self.board = Board(self, 0, 0)
+        self.board.pack(side='left', fill='y')
 
         # select start player (black or white)
-        self.board_frame.set_player('white') # default to white
+        self.board.set_player('white') # default to white
 
 # Status bar selection == 'y'
     def uptime(self):
