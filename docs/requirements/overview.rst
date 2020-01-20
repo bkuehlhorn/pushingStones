@@ -5,8 +5,19 @@ App to play Pushing Stones with only one screen
 
 Menu
 ++++++
-Standard menu options: File(new, open, save, resign, close)
-Game Options: Play: undo, redo, evaluate
+Standard menu options:
+
+* File
+    * new
+    * open
+    * save
+    * resign
+    * close
+* Game Options:
+    * Play:
+        * undo
+        * redo
+        * evaluate
 
 Board
 ++++++

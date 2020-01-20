@@ -110,13 +110,6 @@ class TestFileMenu(unittest.TestCase):
         * Help
         * About
 
-    Common Parameters (change parameters to namedtuple)
-
-    :param home_block: int: [0-1, 0-1]
-    :param attack_block: int: [0-1, 0-1]
-    :param stone_cell: int: [0-3, 0-3]
-    :param dest_cell: int: [0-3, 0-3]
-
     """
     def setUp(self):
         self.app = Application()
