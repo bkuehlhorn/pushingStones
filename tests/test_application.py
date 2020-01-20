@@ -17,7 +17,7 @@ from application import Application
 class TestBasicApplication(unittest.TestCase):
     """
     basic testing for Pushing Stones application
-    --------------------------------------------------------------
+
     basic testing for Pushing Stones application
 
     Additional Tests:
@@ -34,8 +34,8 @@ class TestBasicApplication(unittest.TestCase):
         """
         proper startup of application
         """
-        assert_that(self.app.main_frame.display.cget('text'), starts_with('Cookiecutter: Open-Source Project Templates'))
-        assert_that(self.app.main_frame.display.cget('text'), contains_string('pushing stones'))
+        # assert_that(self.app.main_frame.display.cget('text'), starts_with('Cookiecutter: Open-Source Project Templates'))
+        assert_that(self.app.main_frame.display.cget('text'), contains_string('player: start game'))
 
     def test_click_button1(self):
         """
@@ -86,7 +86,6 @@ class TestBasicApplication(unittest.TestCase):
 class TestFileMenu(unittest.TestCase):
     """
     test menu functions
-    --------------------------------------------------------------
 
     test menu functions
 
@@ -130,5 +129,5 @@ class TestFileMenu(unittest.TestCase):
         proper startup of application
         """
         # self.app.
-        assert_that(self.app.main_frame.display.cget('text'), starts_with('Cookiecutter: Open-Source Project Templates'))
-        assert_that(self.app.main_frame.display.cget('text'), contains_string('pushing stones'))
+        # assert_that(self.app.main_frame.display.cget('text'), starts_with('Cookiecutter: Open-Source Project Templates'))
+        assert_that(self.app.main_frame.display.cget('text'), contains_string('player: start game'))

@@ -19,14 +19,7 @@ class TestStartApp(unittest.TestCase):
     basic testing for Pushing Stones application
 
     Additional Tests:
-        * Init blocks with captured stones
-
-    Common Parameters (change parameters to namedtuple)
-
-    :param home_block: int: [0-1, 0-1]
-    :param attack_block: int: [0-1, 0-1]
-    :param stone_cell: int: [0-3, 0-3]
-    :param destination_cell: int: [0-3, 0-3]
+        * Init blocks with captured stone
 
     """
 
@@ -100,13 +93,6 @@ class TestSelectingHomeStones(unittest.TestCase):
         * Home cell moves one or two cells and pushes one Other Color stone - failure to move
         * Reset move after selecting Home cell
         * Clear home cell
-
-    Common Parameters (change parameters to namedtuple)
-
-    :param home_block: int: [0-1, 0-1]
-    :param attack_block: int: [0-1, 0-1]
-    :param stone_cell: int: [0-3, 0-3]
-    :param destination_cell: int: [0-3, 0-3]
 
     """
 
@@ -267,13 +253,6 @@ class TestSelectingDestinationCell(unittest.TestCase):
     Additional Tests:
         * Destination cell 
 
-    Common Parameters (change parameters to namedtuple)
-
-    :param home_block: int: [0-1, 0-1]
-    :param attack_block: int: [0-1, 0-1]
-    :param stone_cell: int: [0-3, 0-3]
-    :param destination_cell: int: [0-3, 0-3]
-
     """
 
     def setUp(self):
@@ -323,6 +302,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
     def test_valid_move_two_cells(self):
         """
         Destination is 2 cells away
+
         Verify:
             Cell for destination cell is highlighted
             Clear highlights for home blocks
@@ -564,14 +544,6 @@ class TestSelectingAttackStone(unittest.TestCase):
         * Reset move after selecting destination cell
         * Reset move after selecting home cell
 
-
-    Common Parameters (change parameters to namedtuple)
-
-    :param home_block: int: [0-1, 0-1]
-    :param attack_block: int: [0-1, 0-1]
-    :param stone_cell: int: [0-3, 0-3]
-    :param destination_cell: int: [0-3, 0-3]
-
     """
     initial_white_stones = {
         '0,0': [CELL(BLOCK(0,0), 0, 0), CELL(BLOCK(0,0), 0, 1), CELL(BLOCK(0,0), 0, 2), CELL(BLOCK(0,0), 0, 3)],
@@ -717,6 +689,7 @@ class TestSelectingAttackStone(unittest.TestCase):
     def test_move_off(self):
         """
         Select attack cell at edge. Move will be off block
+
         Verify:
             Status reports invalid attack stone selected
         """
@@ -742,6 +715,7 @@ class TestSelectingAttackStone(unittest.TestCase):
     def test_clear_attack_cell(self):
         """
         Click attack cell twice
+
         Verify:
             Status reports select attack stone
             Clear attack cells
@@ -848,14 +822,6 @@ class TestMoveWhiteStone(unittest.TestCase):
         * move white capture black on edge single distance
         * move white capture black on edge double distance
         * move white capture black next to edge double distance
-
-
-    Common Parameters (change parameters to namedtuple)
-
-    :param home_block: int: [0-1, 0-1]
-    :param attack_block: int: [0-1, 0-1]
-    :param stone_cell: int: [0-3, 0-3]
-    :param destination_cell: int: [0-3, 0-3]
 
     """
     initial_white_stones = {
