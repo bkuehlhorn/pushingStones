@@ -141,7 +141,7 @@ class MoveStones(object):
                 self.attack_destination_cell = None
             LOG_STATUSBAR(self.application, 3, 'Select attack cell')
             self.application.board.set_blocks_style('block.TFrame')
-            self.application.board.set_attack_active(self.application.board.move.home_stone.block, style='active.block.TFrame')
+            self.application.board.set_home_active(self.application.board.move.home_stone.block, style='active.block.TFrame')
             return True
         elif cell == self.destination_cell:
             if self.get_attack_stone() is not None:
@@ -155,7 +155,7 @@ class MoveStones(object):
             self.distance = None
             LOG_STATUSBAR(self.application, 3, 'Select destination cell')
             self.application.board.set_blocks_style('block.TFrame')
-            self.application.board.set_attack_active(self.application.board.move.home_stone.block, style='active.block.TFrame')
+            self.application.board.set_home_active(self.application.board.current_player, style='active.block.TFrame')
             return True
         elif cell == self.home_stone:
             if self.get_attack_stone() is not None:
@@ -476,18 +476,12 @@ class Board(tkinter.Canvas):
             self.blocks[block_column][self.home_boards[color]]['style'] = style
 
     def set_attack_active(self, block, style='active.block.TFrame'):
-        # home blocks for white are [1][0] and [1][1]
-        # change style to highlight
         for block_row in range(2):
             self.blocks[self.attack_boards[block.column]][block_row]['style'] = style
 
     def clear_moves(self):
         if self.move is not None:
-            cell = self.move.get_attack_stone()
-            if cell is None:
-                cell = self.move.destination_cell
-            if cell is None:
-                cell = self.move.home_stone
+            cell = self.move.home_stone
             if cell is not None:
                 self.move.clear_cells(cell)
         self.application.board.set_blocks_style('block.TFrame')
@@ -530,7 +524,8 @@ class Board(tkinter.Canvas):
             self.move_history.add_history(self.move.save(), pushed_stone)
             self.move.clear_cells(self.move.home_stone)
             self.set_player(self.other_stone[self.current_player])
-
+            self.application.board.set_blocks_style('block.TFrame')
+            self.set_home_active(self.current_player)
         return True
 
     def find_pushed_stone(self, move):
@@ -831,7 +826,7 @@ class Cell(ttk.Frame):
                 return
             self.board.move.set_direction(direction=direction, destination_cell=self)
 
-            if self.destination_cells_invalid(self.board.move, self.board.move.home_stone, 0):
+            if self.destination_cells_invalid(self.board.move, self.board.move.home_stone, 1):
                 LOG_STATUSBAR(self.application, 3, f'Destination cells must be empty')
                 return
 
@@ -854,7 +849,7 @@ class Cell(ttk.Frame):
                 self.board.move.set_attack_stone(self)
                 #todo target can not be over edge of block
 
-                if self.destination_cells_invalid(self.board.move, self.board.move.get_attack_stone(), 1):
+                if self.destination_cells_invalid(self.board.move, self.board.move.get_attack_stone(), 2):
                     #todo check for color of pushed cell
                     self.board.move.attack_destination_cell = None
                     LOG_STATUSBAR(self.application, 3, f'Attack Destination cell invalid')
@@ -887,7 +882,7 @@ class Cell(ttk.Frame):
         column_delta = 0 if move.direction.column_delta == 0 else int(copysign(1, move.direction.column_delta))
         row_delta = 0 if move.direction.row_delta == 0 else int(copysign(1, move.direction.row_delta))
         pushed_stones = 0
-        for place in range(move.distance + 1):
+        for place in range(move.distance + count - 1):
             column += column_delta
             row += row_delta
             if not ((-1 < column < 4) and (-1 < row < 4)):

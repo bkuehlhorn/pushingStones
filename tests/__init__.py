@@ -32,8 +32,22 @@ def select_cell(app, color, cell):
     if app_cell.cget('text') != color:
         return f'Cell not expected color: expected: {color}, actual: {app_cell.cget("text")}'
     app_cell.button.invoke()
-    error = ''
+    return ''
 
+def verify_blocks_details(app, style):
+    """
+    verify block, cell is in state.
+    verify block, cell has color
+
+    :param app: pushing stones app
+    :param style: cell style used for highlighted or normal
+    :return: true (verified), false(problem) - may return empty for true and description for error
+    """
+    error = []
+    for column in range(2):
+        for row in range(2):
+            if app.board.blocks[column][row]['style'] == '':
+                error.append(f'block[{column}][{row}] invalid style: expected {style}, actual: {app.board.blocks[column][row]["style"]}')
     return error
 
 def verify_cell_details(app, style, color, cell):
