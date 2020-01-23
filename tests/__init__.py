@@ -34,7 +34,7 @@ def select_cell(app, color, cell):
     app_cell.button.invoke()
     return ''
 
-def verify_blocks_details(app, style):
+def verify_blocks_details(app, styles):
     """
     verify block, cell is in state.
     verify block, cell has color
@@ -46,8 +46,8 @@ def verify_blocks_details(app, style):
     error = []
     for column in range(2):
         for row in range(2):
-            if app.board.blocks[column][row]['style'] == '':
-                error.append(f'block[{column}][{row}] invalid style: expected {style}, actual: {app.board.blocks[column][row]["style"]}')
+            if app.board.blocks[column][row]['style'] != styles[column][row]:
+                error.append(f'block[{column}][{row}] invalid style: expected {styles[column][row]}, actual: {app.board.blocks[column][row]["style"]}')
     return error
 
 def verify_cell_details(app, style, color, cell):

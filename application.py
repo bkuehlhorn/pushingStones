@@ -170,7 +170,7 @@ class MoveStones(object):
                 self.distance = None
             LOG_STATUSBAR(self.application, 3, 'Select home stone')
             self.application.board.set_blocks_style('block.TFrame')
-            self.application.board.set_attack_active(self.application.board.move.home_stone.block, style='active.block.TFrame')
+            self.application.board.set_home_active(self.application.board.current_player, style='active.block.TFrame')
             self.home_stone.set_cell(style='')
             self.home_stone = None
             return True
@@ -791,12 +791,6 @@ class Cell(ttk.Frame):
         LOG_STATUSBAR(self.application, text=color)
         LOG_STATUSBAR(self.application, 1, name)
         LOG_STATUSBAR(self.application, 2, self.button.cget('text'))
-        # LOG_STATUSBAR(self.application, 3, self['style'])
-        # if self['style'] == 'selected.TLabel':
-        #     LOG_STATUSBAR(self.application, 3, f'Please select another cell')
-        #     self['style'] = ''
-        #     self.board.move = None
-        #     return
 
         if self.board.move is None or self.board.move.home_stone is None:
             if color != self.button.cget('text'):

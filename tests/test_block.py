@@ -39,12 +39,9 @@ class TestStartApp(unittest.TestCase):
 
         :return:
         """
-        initial_block_styles = [
-            ['active.block.TFrame', 'block.TFrame'],
-            ['active.block.TFrame', 'block.TFrame'],
-        ]
-        block_styles = self.app.board.get_block_style()
-        assert_that(block_styles, equal_to(initial_block_styles))
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_stones_in_setup_board(self):
         """
@@ -83,6 +80,10 @@ class TestStartApp(unittest.TestCase):
 
         errors = verify_cells(self.app, 'black', initial_black_stones)
         assert_that(errors, is_([]), f'missing black stones: {errors}')
+
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
 
 class TestSelectingHomeStones(unittest.TestCase):
@@ -144,6 +145,9 @@ class TestSelectingHomeStones(unittest.TestCase):
         assert_that(statusbar_text(self.app, 1), equal_to(f'block {self.home_block_loc.column} {self.home_block_loc.row} {self.home_stone.column} {self.home_stone.row}'))
         assert_that(statusbar_text(self.app, 2), equal_to(f'white'))
         assert_that(statusbar_text(self.app, 3), equal_to(f'Please select destination cell'))
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_select_clear_home_stone(self):
         """
@@ -179,6 +183,9 @@ class TestSelectingHomeStones(unittest.TestCase):
         assert_that(statusbar_text(self.app, 1), equal_to(f'block {self.home_block_loc.column} {self.home_block_loc.row} {self.home_stone.column} {self.home_stone.row}'))
         assert_that(statusbar_text(self.app, 2), equal_to(f'white'))
         assert_that(statusbar_text(self.app, 3), equal_to(f'Select home stone'))
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_select_empty_home_stone(self):
         """
@@ -212,6 +219,9 @@ class TestSelectingHomeStones(unittest.TestCase):
         assert_that(statusbar_text(self.app, 1), equal_to(f'Unset status 2'))
         assert_that(statusbar_text(self.app, 2), equal_to(f'Unset status 3'))
         assert_that(statusbar_text(self.app, 3), equal_to(f'Unset status 4'))
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_select_other_home_stone(self):
         """
@@ -298,6 +308,9 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'empty',
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
+        verified = verify_blocks_details(self.app, [['block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'active.block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_valid_move_one_cell_blocked(self):
         """
@@ -456,38 +469,6 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'Please select an empty cell'
                                                         ]))
 
-    # def test_pushing_other_stone_two_cell(self):
-    #     """
-    #         Move other stone next to home stone to move
-    #         Select home stone
-    #         Select destination cell to move other stone
-    #
-    #     Verify:
-    #     """
-    #     home_block = BLOCK(0, 0)
-    #     from_cell = find_cell(self.app, CELL(home_block, 0, 3))
-    #     to_cell = find_cell(self.app, CELL(home_block, 2, 2))
-    #     self.app.board.blocks[0][0].move_stone(from_cell, to_cell)
-    #
-    #     self.init(color='white',
-    #               home_block=(0, 0),
-    #               home_stone=(0, 0),
-    #               destination_cell=(2, 2),
-    #               attack_block=(1, 0),
-    #               attack_cell=(0, 0))
-    #
-    #     select_cell(self.app, 'empty', self.destination_cell)
-    #
-    #     select_results = select_cell(self.app, 'black', self.destination_cell)
-    #     assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-    #     verified = verify_cell_details(self.app, '', 'black', self.destination_cell)
-    #     assert_that(verified, equal_to(''), f'cell not verified: {verified}')
-    #     assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-    #                                                     cell_status(self.destination_cell),
-    #                                                     f'black',
-    #                                                     f'Please select an empty cell'
-    #                                                     ]))
-
     def test_destination_cell_cleared(self):
         """
         Select destination cell on home board second time to clear
@@ -505,14 +486,15 @@ class TestSelectingDestinationCell(unittest.TestCase):
         select_cell(self.app, 'empty', self.destination_cell)
 
         select_results = select_cell(self.app, 'empty', self.destination_cell)
-        # assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        # assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-        #                                                 cell_status(self.destination_cell),
-        #                                                 f'empty',
-        #                                                 f'Select destination cell'
-        #                                                 ]))
-        # verified = verify_blocks_details(self.app, '')
-        # assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
+        assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
+                                                        cell_status(self.destination_cell),
+                                                        f'empty',
+                                                        f'Select destination cell'
+                                                        ]))
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_home_stone_cleared(self):
         """
@@ -534,6 +516,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
         select_results = select_cell(self.app, self.color, self.home_stone)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
         verified = verify_cell_details(self.app, '', self.color, self.home_stone)
+        assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
@@ -541,6 +524,9 @@ class TestSelectingDestinationCell(unittest.TestCase):
                                                         f'empty',
                                                         f'Select home stone'
                                                         ]))
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_invalid(self):
         """
@@ -693,7 +679,9 @@ class TestSelectingAttackStone(unittest.TestCase):
         if self.attack_destination_cell is not None:
             verified = verify_cell_details(self.app, 'selected.TLabel', None, self.attack_destination_cell)
             assert_that(verified, equal_to(''), f'cell not verified: {verified}')
-
+        verified = verify_blocks_details(self.app, [['block.TFrame', 'block.TFrame'],
+                                                    ['block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_to_edge(self):
         """
@@ -723,7 +711,9 @@ class TestSelectingAttackStone(unittest.TestCase):
         if self.attack_destination_cell is not None:
             verified = verify_cell_details(self.app, 'selected.TLabel', None, self.attack_destination_cell)
             assert_that(verified, equal_to(''), f'cell not verified: {verified}')
-
+        verified = verify_blocks_details(self.app, [['block.TFrame', 'block.TFrame'],
+                                                    ['block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_double_move_off_edge(self):
         """
@@ -776,6 +766,9 @@ class TestSelectingAttackStone(unittest.TestCase):
                                                         f'white',
                                                         f'Attack Destination cell invalid'
                                                         ]))
+        verified = verify_blocks_details(self.app, [['block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'active.block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_clear_attack_cell(self):
         """
@@ -808,6 +801,9 @@ class TestSelectingAttackStone(unittest.TestCase):
                                                         f'tbd',
                                                         f'Select attack cell'
                                                         ]))
+        verified = verify_blocks_details(self.app, [['block.TFrame', 'block.TFrame'],
+                                                    ['block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_clear_destination_cell(self):
         """
@@ -839,6 +835,9 @@ class TestSelectingAttackStone(unittest.TestCase):
                                                         f'tbd',
                                                         f'Select destination cell'
                                                         ]))
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
     def test_clear_home_cell(self):
         """
@@ -872,6 +871,9 @@ class TestSelectingAttackStone(unittest.TestCase):
                                                         f'tbd',
                                                         f'Select home stone'
                                                         ]))
+        verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
+                                                    ['active.block.TFrame', 'block.TFrame']])
+        assert_that(verified, equal_to([]), f'blocks not verified: {verified}')
 
 
 class TestMoveWhiteStone(unittest.TestCase):
