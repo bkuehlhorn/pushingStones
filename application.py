@@ -141,7 +141,7 @@ class MoveStones(object):
                 self.attack_destination_cell = None
             LOG_STATUSBAR(self.application, 3, 'Select attack cell')
             self.application.board.set_blocks_style('block.TFrame')
-            self.application.board.set_home_active(self.application.board.move.home_stone.block, style='active.block.TFrame')
+            self.application.board.set_home_active(self.application.board.current_player, style='active.block.TFrame')
             return True
         elif cell == self.destination_cell:
             if self.get_attack_stone() is not None:
@@ -238,6 +238,9 @@ class StatusBar(ttk.Frame):
 
     def set_text(self, status_index, new_text):
         self.labels[status_index].config(text=new_text)
+
+    def get_text(self, text):
+        return self.cget(text)
 
 
 
@@ -697,7 +700,7 @@ class Block(ttk.Frame):
         :param colors: single color or list of colors
         :return: true if is, false if not
         """
-        return self.cells[column][row].cget('text') == colors
+        return self.cells[column][row].get_cell_color() == colors
 
     def reset_all_cells(self):
         for column in range(4):
@@ -706,11 +709,11 @@ class Block(ttk.Frame):
 
     def all_styles(self):
         # return list(map(lambda x: list(map(lambda y: f'{self}:{y}', x)), list(self.cells)))
-        return list(map(lambda x: list(map(lambda y: f'{self} style:{y["style"]}', x)), list(self.cells)))
+        return list(map(lambda x: list(map(lambda y: f'{self} style:{y.get_cell_style()}', x)), list(self.cells)))
 
     def all_text(self):
         # return list(map(lambda x: list(map(lambda y: f'{self}:{y}', x)), list(self.cells)))
-        return list(map(lambda x: list(map(lambda y: f'{self} contents:{y.cget("text")}', x)), list(self.cells)))
+        return list(map(lambda x: list(map(lambda y: f'{self} contents:{y.get_cell_color()}', x)), list(self.cells)))
 
 class Cell(ttk.Frame):
     """
@@ -734,7 +737,10 @@ class Cell(ttk.Frame):
         self.change_cell = {'empty': 'white', 'white': 'black', 'black': 'empty'}
 
         image = self.master.cell_image[color]
-        self.button = CellButton(parent, *args, image=image, text=color, command=partial (self.select_stone), **kwargs)
+        if issubclass(CellButton, ttk.Button):
+            self.button = CellButton(parent, *args, image=image, text=color, command=partial (self.select_stone), **kwargs)
+        self.style = ''
+        self.color = 'empty'
 
     def __str__(self):
         return f'{self.block}:{self.get_cell_color()}:{self.column}:{self.row}'
@@ -790,10 +796,10 @@ class Cell(ttk.Frame):
 
         LOG_STATUSBAR(self.application, text=color)
         LOG_STATUSBAR(self.application, 1, name)
-        LOG_STATUSBAR(self.application, 2, self.button.cget('text'))
+        LOG_STATUSBAR(self.application, 2, self.get_cell_color()) # button.cget('text'))
 
         if self.board.move is None or self.board.move.home_stone is None:
-            if color != self.button.cget('text'):
+            if color != self.get_cell_color(): #button.cget('text'):
                 LOG_STATUSBAR(self.application, 3, f'Please select your own stone')
                 return
 
@@ -801,7 +807,7 @@ class Cell(ttk.Frame):
             LOG_STATUSBAR(self.application, 3, f'Please select destination cell')
             self['style'] = 'selected.TLabel'
         elif self.board.move.direction is None:
-            if 'empty' != self.button.cget('text'):
+            if 'empty' != self.get_cell_color(): # button.cget('text'):
                 LOG_STATUSBAR(self.application, 3, f'Please select an empty cell')
                 return
             if block != self.board.move.home_stone.block:
@@ -838,7 +844,8 @@ class Cell(ttk.Frame):
                 push only other stone (check if push own is valid)
                 
             '''
-            if self.button.cget('text') == color:
+            if self.get_cell_color() == color:
+            # if self.button.cget('text') == color:
                 self['style'] = 'selected.TLabel'
                 self.board.move.set_attack_stone(self)
                 #todo target can not be over edge of block
@@ -922,18 +929,32 @@ class Cell(ttk.Frame):
         :return:
         """
         if color is not None:
+            self.color = color
             image = self.master.cell_image[color]
-            self.button.configure(image=image, text=color)
+            if issubclass(CellButton, ttk.Button):
+                self.button.configure(image=image, text=color)
         if style is not None:
+            self.style = style
             self['style'] = style
 
+    def get_style(self):
+        return self.style
+
     def get_cell_color(self):
-        return self.button.cget('text')
+        return self.color
+        # return self.button.cget('text')
 
     def get_cell_style(self):
-        return self['style']
+        return self.style
+        # return self['style']
 
+    def invoke(self):
+        if issubclass(CellButton, ttk.Button):
+            self.button.invoke()
+        else:
+            self.select_stone()
 
+# class CellButton(object):
 class CellButton(ttk.Button):
     """
     Button where stones are placed and moved.

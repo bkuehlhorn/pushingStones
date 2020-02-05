@@ -29,9 +29,10 @@ def select_cell(app, color, cell):
     app_cell = find_cell(app, cell)
     if app_cell is None:
         return 'Cell not found. may be invalid column and row in block or cell'
-    if app_cell.cget('text') != color:
-        return f'Cell not expected color: expected: {color}, actual: {app_cell.cget("text")}'
-    app_cell.button.invoke()
+    if app_cell.get_cell_color() != color:
+        return f'Cell not expected color: expected: {color}, actual: {app_cell.get_cell_color()}'
+    app_cell.invoke()
+    # app_cell.button.invoke()
     return ''
 
 def verify_blocks_details(app, styles):
@@ -66,10 +67,10 @@ def verify_cell_details(app, style, color, cell):
     if found_cell is None:
         return 'Cell not found. may be invalid column and row in block or cell'
     # verify state: raised or normal
-    if found_cell['style'] != style:
-        return f'Cell invalid style: expected {style}, actual: {found_cell["style"]}'
-    if color is not None and found_cell.cget('text') != color:
-        return f'Cell not expected color: expected: {color}, actual: {found_cell.cget("text")}'
+    if found_cell.get_style() != style:
+        return f'Cell invalid style: expected {style}, actual: {found_cell.get_style()}'
+    if color is not None and found_cell.get_cell_color() != color:
+        return f'Cell not expected color: expected: {color}, actual: {found_cell.get_cell_color()}'
 
     return error
 
@@ -105,7 +106,8 @@ def verify_cells(app, color, stones_list, captured=None):
         for stone in stones:
             if stone is None:
                 continue  # consider checking captured stones todo: finish developing captured stones
-            actual_cell = app.board.blocks[block_column][block_row].cells[stone.row][stone.column].cget('text')
+            # actual_cell = app.board.blocks[block_column][block_row].cells[stone.row][stone.column].cget('text')
+            actual_cell = app.board.blocks[block_column][block_row].cells[stone.row][stone.column].get_cell_color()
             if actual_cell != color:
                 errors.append(
                     f'expected stone not at block({block_column}, {block_row}, cell({stone}. expected {color}, actual {actual_cell}')
@@ -134,6 +136,6 @@ def find_stones(app, color, block):
     for column in range(4):
         for row in range(4):
             cell = app.board.blocks[block.column][block.row].cells[column][row]
-            if cell.cget('text') == color:
+            if cell.get_cell_color() == color:
                 stones_in_block.append(cell)
     return stones_in_block
