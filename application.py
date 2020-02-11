@@ -412,8 +412,9 @@ class Board(tkinter.Canvas):
     def __init__(self, parent, x, y):
         # ttk.Frame.__init__(self, parent)
         super().__init__(parent) # create a frame (self)
-        self.application = self.master
+        self.application = parent
         self.setup_cells = False
+        self.headless = False
 
         self.other_stone = {'white': 'black', 'black': 'white'}
         self.capture_detail = {'black': [], 'white': []}
@@ -430,7 +431,9 @@ class Board(tkinter.Canvas):
         for column in range(2):
             for row in range(2):
                 block = Block(self, column, row, self.images, 0, 0, name=f'block:{column}:{row}')
-                block.grid(column=column*6, row=row*10+2, columnspan=6)
+                # if issubclass(BLOCK, ttk.Frame):
+                #     block.grid(column=column*6, row=row*10+2, columnspan=6)
+                block.grid(column=column * 6, row=row * 10 + 2, columnspan=6)
                 self.blocks[column][row] = block
 
         self.init_board()
@@ -470,17 +473,17 @@ class Board(tkinter.Canvas):
         # change style for all blocks
         for block_column in range(2):
             for block_row in range(2):
-                self.blocks[block_column][block_row]['style'] = style
+                self.blocks[block_column][block_row].set_style(style)
 
     def set_home_active(self, color, style='active.block.TFrame'):
         # home blocks for white are [1][0] and [1][1]
         # change style to highlight
         for block_column in range(2):
-            self.blocks[block_column][self.home_boards[color]]['style'] = style
+            self.blocks[block_column][self.home_boards[color]].set_style(style)
 
     def set_attack_active(self, block, style='active.block.TFrame'):
         for block_row in range(2):
-            self.blocks[self.attack_boards[block.column]][block_row]['style'] = style
+            self.blocks[self.attack_boards[block.column]][block_row].set_style(style)
 
     def clear_moves(self):
         if self.move is not None:
@@ -577,8 +580,11 @@ class Board(tkinter.Canvas):
         """
         capture_cells = []
         for each in range(5):
-            capture = tkinter.Label(self, image=image)
-            capture.grid(column=each+column, row=row)
+            if issubclass(Block, ttk.Frame):
+                capture = tkinter.Label(self, image=image)
+                capture.grid(column=each+column, row=row)
+            else:
+                capture = image
             capture_cells.append(capture)
         return capture_cells
 
@@ -650,6 +656,7 @@ class Board(tkinter.Canvas):
             return None
 
 
+# class Block(object):
 class Block(ttk.Frame):
     """
     Block of 4x4 cells
@@ -657,14 +664,18 @@ class Block(ttk.Frame):
     """
 
     def __init__(self, parent, block_column, block_row, images, column=0, row=0, name=''):
-        # ttk.Frame.__init__(self, parent, borderwidth=20)
-        ttk.Frame.__init__(self, parent, style='block.TFrame', borderwidth=20, name=name)
+        if issubclass(Block, ttk.Frame):
+            # ttk.Frame.__init__(self, parent, borderwidth=20)
+            ttk.Frame.__init__(self, parent, style='block.TFrame', borderwidth=20, name=name)
+        else:
+            self.master = parent
         self.application = self.master.master
         self.board = self.master
         self.column = block_column
         self.row = block_row
 
         self.cell_image = images
+        self.style = 'block.TFrame'
 
         button_size = 20
         # create
@@ -673,13 +684,22 @@ class Block(ttk.Frame):
             row_cells = []
             for cell_row in range(4):
                 cell = Cell(self, color='empty', column=cell_column, row=cell_row, name=f'{name}:{cell_column}:{cell_row}')
-                cell.grid(column=cell_column, row=cell_row)
+                if issubclass(Cell, ttk.Frame):
+                    cell.grid(column=cell_column, row=cell_row)
                 row_cells.append(cell)
             self.cells.append(row_cells)
         pass
 
     def __str__(self):
-        return f'{self.board}:block={self.column}:{self.row}:style={self["style"]}'
+        return f'{self.board}:block={self.column}:{self.row}:style={self.get_style()}'
+
+    def set_style(self, style):
+        self.style = style
+        if issubclass(Block, ttk.Frame):
+            self['style'] = style
+
+    def get_style(self):
+        return self.style
 
     def move_stone(self, from_cell, to_cell):
         """
@@ -715,6 +735,8 @@ class Block(ttk.Frame):
         # return list(map(lambda x: list(map(lambda y: f'{self}:{y}', x)), list(self.cells)))
         return list(map(lambda x: list(map(lambda y: f'{self} contents:{y.get_cell_color()}', x)), list(self.cells)))
 
+
+# class Cell(object):
 class Cell(ttk.Frame):
     """
     Button where stones are placed and moved.
@@ -728,7 +750,11 @@ class Cell(ttk.Frame):
         :param x: column
         :param y: row
         """
-        ttk.Frame.__init__(self, parent, *args, **kwargs)
+        if issubclass(Cell, ttk.Frame):
+            ttk.Frame.__init__(self, parent, *args, **kwargs)
+        else:
+            self.master = parent
+        # ttk.Frame.__init__(self, parent, *args, **kwargs)
         self.application = self.master.master.master
         self.board = self.master.master
         self.block = self.master
@@ -771,9 +797,13 @@ class Cell(ttk.Frame):
             return
         s = ttk.Style()
         color = self.board.current_player
-        name = self.winfo_name().split(':')
-        # look for a better way
-        (_, block_column, block_row, cell_column, cell_row) = name
+        # if issubclass(Cell, ttk.Frame):
+        #     name = self.winfo_name().split(':')
+        #     # look for a better way
+        #     (_, block_column, block_row, cell_column, cell_row) = name
+        # else:
+        name = str(self)
+            # name = ':'.join(['xxx', self.block.column, self.block.row, self.column, self.row])
         block = self.block
         cell = self
 
@@ -790,7 +820,7 @@ class Cell(ttk.Frame):
         if self.board.move is not None and self.board.move.clear_cells(self):
             return
 
-        if self.block['style'] != 'active.block.TFrame':
+        if self.block.get_style() != 'active.block.TFrame':
             LOG_STATUSBAR(self.application, 3, f'Please select stone in home board')
             return
 
@@ -805,7 +835,8 @@ class Cell(ttk.Frame):
 
             self.board.move = MoveStones(self.application, home_stone=cell)
             LOG_STATUSBAR(self.application, 3, f'Please select destination cell')
-            self['style'] = 'selected.TLabel'
+            self.set_cell(style='selected.TLabel')
+
         elif self.board.move.direction is None:
             if 'empty' != self.get_cell_color(): # button.cget('text'):
                 LOG_STATUSBAR(self.application, 3, f'Please select an empty cell')
@@ -830,7 +861,7 @@ class Cell(ttk.Frame):
                 LOG_STATUSBAR(self.application, 3, f'Destination cells must be empty')
                 return
 
-            self['style'] = 'selected.TLabel'
+            self.set_cell(style='selected.TLabel')
             self.board.set_blocks_style()
             self.board.set_attack_active(self.board.move.home_stone.block, style='active.block.TFrame')
             LOG_STATUSBAR(self.application, 3, f'Please select stone to move on attack blocks')
@@ -845,8 +876,7 @@ class Cell(ttk.Frame):
                 
             '''
             if self.get_cell_color() == color:
-            # if self.button.cget('text') == color:
-                self['style'] = 'selected.TLabel'
+                self.set_cell(style='selected.TLabel')
                 self.board.move.set_attack_stone(self)
                 #todo target can not be over edge of block
 
@@ -935,7 +965,8 @@ class Cell(ttk.Frame):
                 self.button.configure(image=image, text=color)
         if style is not None:
             self.style = style
-            self['style'] = style
+            if issubclass(CellButton, ttk.Button):
+                self['style'] = style
 
     def get_style(self):
         return self.style
@@ -1005,6 +1036,7 @@ class MenuBar(tkinter.Menu):
         filemenu.add_separator()
         playmenu.add_command(label=_('Evaluate'), command=self.evaluate_dialog)
         playmenu.add_command(label=_('Setup'), command=self.setup_dialog)
+        playmenu.add_command(label=_('Display'), command=self.setup_headless)
 
         helpmenu = tkinter.Menu(self, tearoff=False)
         helpmenu.add_command(label=_('Help'), command=lambda:
@@ -1115,6 +1147,16 @@ class MenuBar(tkinter.Menu):
 
         PopupDialog(self, _('Setup button pressed'), _(f'state for setup: {self.master.board.setup_cells}'))
         self.master.board.setup_cells = not self.master.board.setup_cells
+
+    def setup_headless(self):
+        """
+        Non-functional dialog indicating successful navigation.
+
+        :return:
+        """
+
+        PopupDialog(self, _('Headless button pressed'), _(f'state for setup: {self.master.board.headless}'))
+        self.master.board.headless = not self.master.board.headless
 
     def undo_dialog(self):
         """

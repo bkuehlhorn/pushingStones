@@ -47,8 +47,8 @@ def verify_blocks_details(app, styles):
     error = []
     for column in range(2):
         for row in range(2):
-            if app.board.blocks[column][row]['style'] != styles[column][row]:
-                error.append(f'block[{column}][{row}] invalid style: expected {styles[column][row]}, actual: {app.board.blocks[column][row]["style"]}')
+            if app.board.blocks[column][row].get_style() != styles[column][row]:
+                error.append(f'block[{column}][{row}] invalid style: expected {styles[column][row]}, actual: {app.board.blocks[column][row].get_style()}')
     return error
 
 def verify_cell_details(app, style, color, cell):
@@ -115,9 +115,10 @@ def verify_cells(app, color, stones_list, captured=None):
     # verify captured stones
     return errors
 
-def cell_status(cell):
+def cell_status(cell, status, color):
+    return f'.!board:block={cell.block.column}:{cell.block.row}:style={status}.TFrame:{color}:{cell.column}:{cell.row}'
     # f'block {block_loc.column} {block_loc.row} {dest_cell.column} {dest_cell.row}',
-    return f'block {cell.block.column} {cell.block.row} {cell.column} {cell.row}'
+    # return f'block {cell.block.column} {cell.block.row} {cell.column} {cell.row}'
 
 def find_stones_on_blocks(app, color, block=None):
     if block is None:

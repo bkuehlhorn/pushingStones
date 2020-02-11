@@ -132,17 +132,17 @@ class TestSelectingHomeStones(unittest.TestCase):
         select_results = select_cell(self.app, self.color, self.home_stone)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
 
-        verified = verify_cell_details(self.app, '', self.color, self.home_stone)
+        verified = verify_cell_details(self.app, 'selected.TLabel', self.color, self.home_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.home_stone),
+                                                        cell_status(self.home_stone, 'active.block', 'white'),
                                                         f'white',
                                                         f'Please select destination cell'
                                                         ]))
 
         assert_that(statusbar_text(self.app, 0), equal_to(f'{self.color}'))
-        assert_that(statusbar_text(self.app, 1), equal_to(f'block {self.home_block_loc.column} {self.home_block_loc.row} {self.home_stone.column} {self.home_stone.row}'))
+        assert_that(statusbar_text(self.app, 1), equal_to(f'{cell_status(self.home_stone, "active.block", "white")}'))
         assert_that(statusbar_text(self.app, 2), equal_to(f'white'))
         assert_that(statusbar_text(self.app, 3), equal_to(f'Please select destination cell'))
         verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
@@ -174,13 +174,13 @@ class TestSelectingHomeStones(unittest.TestCase):
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.home_stone),
+                                                        cell_status(self.home_stone, 'active.block', 'white'),
                                                         f'white',
                                                         f'Select home stone'
                                                         ]))
 
         assert_that(statusbar_text(self.app, 0), equal_to(f'{self.color}'))
-        assert_that(statusbar_text(self.app, 1), equal_to(f'block {self.home_block_loc.column} {self.home_block_loc.row} {self.home_stone.column} {self.home_stone.row}'))
+        assert_that(statusbar_text(self.app, 1), equal_to(f'{cell_status(self.home_stone, "active.block", "white")}'))
         assert_that(statusbar_text(self.app, 2), equal_to(f'white'))
         assert_that(statusbar_text(self.app, 3), equal_to(f'Select home stone'))
         verified = verify_blocks_details(self.app, [['active.block.TFrame', 'block.TFrame'],
@@ -277,6 +277,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
         self.attack_block_loc = BLOCK(*attack_block)
         self.home_stone = CELL(self.home_block_loc, *home_stone)
         self.destination_cell = CELL(self.home_block_loc, *destination_cell)
+        # self.destination_cell = lambda block, cell: CELL(block, *cell), self.home_block_loc, destination_cell
         self.attack_stone = CELL(self.attack_block_loc, *attack_cell)
         self.find_home_cell = find_cell(self.app, self.home_stone)
         self.find_destination_cell = find_cell(self.app, self.destination_cell)
@@ -301,10 +302,10 @@ class TestSelectingDestinationCell(unittest.TestCase):
 
         select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'empty'),
                                                         f'empty',
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
@@ -334,10 +335,11 @@ class TestSelectingDestinationCell(unittest.TestCase):
 
         select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'empty'),
+
                                                         f'empty',
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
@@ -361,11 +363,11 @@ class TestSelectingDestinationCell(unittest.TestCase):
 
         select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'empty'),
                                                         f'empty',
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
@@ -398,11 +400,11 @@ class TestSelectingDestinationCell(unittest.TestCase):
 
         select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'empty'),
                                                         f'empty',
                                                         f'Please select stone to move on attack blocks'
                                                         ]))
@@ -434,7 +436,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
         verified = verify_cell_details(self.app, '', 'black', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'black'),
                                                         f'black',
                                                         f'Please select an empty cell'
                                                         ]))
@@ -464,7 +466,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
         verified = verify_cell_details(self.app, '', 'black', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'black'),
                                                         f'black',
                                                         f'Please select an empty cell'
                                                         ]))
@@ -487,8 +489,9 @@ class TestSelectingDestinationCell(unittest.TestCase):
 
         select_results = select_cell(self.app, 'empty', self.destination_cell)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
+        d = CELL(self.home_block_loc, *(1, 1))
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'empty'),
                                                         f'empty',
                                                         f'Select destination cell'
                                                         ]))
@@ -520,7 +523,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
         verified = verify_cell_details(self.app, '', 'empty', self.destination_cell)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'empty'),
                                                         f'empty',
                                                         f'Select home stone'
                                                         ]))
@@ -548,7 +551,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'empty'),
                                                         f'empty',
                                                         f'Please cell closer to stone to move'
                                                         ]))
@@ -571,7 +574,7 @@ class TestSelectingDestinationCell(unittest.TestCase):
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.destination_cell),
+                                                        cell_status(self.destination_cell, 'active.block', 'empty'),
                                                         f'empty',
                                                         f'Please cell closer to stone to move'
                                                         ]))
@@ -667,12 +670,12 @@ class TestSelectingAttackStone(unittest.TestCase):
 
         select_results = select_cell(self.app, self.color, self.attack_stone)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'white', self.attack_stone)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'white', self.attack_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         # destination cell on attack board highlighted
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.attack_stone),
+                                                        cell_status(self.attack_stone, 'active.block', self.color),
                                                         f'tbd',
                                                         f'Hit make move when done'
                                                         ]))
@@ -699,12 +702,12 @@ class TestSelectingAttackStone(unittest.TestCase):
 
         select_results = select_cell(self.app, self.color, self.attack_stone)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'white', self.attack_stone)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'white', self.attack_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         # destination cell on attack board highlighted
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.attack_stone),
+                                                        cell_status(self.attack_stone, 'active.block', self.color),
                                                         f'tbd',
                                                         f'Hit make move when done'
                                                         ]))
@@ -731,12 +734,12 @@ class TestSelectingAttackStone(unittest.TestCase):
 
         select_results = select_cell(self.app, self.color, self.attack_stone)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'white', self.attack_stone)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'white', self.attack_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         # destination cell on attack board highlighted
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.attack_stone),
+                                                        cell_status(self.attack_stone, 'active.block', 'white'),
                                                         f'white',
                                                         f'Attack Destination cell invalid'
                                                         ]))
@@ -757,12 +760,12 @@ class TestSelectingAttackStone(unittest.TestCase):
 
         select_results = select_cell(self.app, self.color, self.attack_stone)
         assert_that(select_results, equal_to(''), f'select_cell failed: {select_results}')
-        verified = verify_cell_details(self.app, '', 'white', self.attack_stone)
+        verified = verify_cell_details(self.app, 'selected.TLabel', 'white', self.attack_stone)
         assert_that(verified, equal_to(''), f'cell not verified: {verified}')
         # destination cell on attack board highlighted
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.attack_stone),
+                                                        cell_status(self.attack_stone, 'active.block', 'white'),
                                                         f'white',
                                                         f'Attack Destination cell invalid'
                                                         ]))
@@ -797,7 +800,7 @@ class TestSelectingAttackStone(unittest.TestCase):
             assert_that(verified, equal_to(''), f'cell not verified: {verified}')
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.attack_stone),
+                                                        cell_status(self.attack_stone, 'active.block', self.color),
                                                         f'tbd',
                                                         f'Select attack cell'
                                                         ]))
@@ -831,7 +834,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         # destination cell on attack board normal
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.attack_stone),
+                                                        cell_status(self.attack_stone, 'active.block', self.color),
                                                         f'tbd',
                                                         f'Select destination cell'
                                                         ]))
@@ -867,7 +870,7 @@ class TestSelectingAttackStone(unittest.TestCase):
         # destination cell on attack board normal
 
         assert_that(statusbar_text(self.app), equal_to([f'{self.color}',
-                                                        cell_status(self.attack_stone),
+                                                        cell_status(self.attack_stone, 'active.block', self.color),
                                                         f'tbd',
                                                         f'Select home stone'
                                                         ]))
